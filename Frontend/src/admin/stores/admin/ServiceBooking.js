@@ -1,35 +1,24 @@
-import axios from "axios";
+import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios';
 
 export const ServiceBookingService = {
-  getHeaders() {
-    const token = localStorage.getItem("token");
-
-    return {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-  },
-  // Lấy danh sách tất cả các đặt lịch
+   
   async getServiceBookings() {
-    return await axios.get("http://localhost:8080/api/service-bookings");
+    return await sendGet("http://localhost:8080/api/service-bookings");
   },
 
    async getUserServiceBookings() {
-    return await axios.get(
-      "http://localhost:8080/api/service-bookings/getUserServiceBookings",
-      {
-        headers: this.getHeaders(),
-      }
+    return await sendGet(
+      "http://localhost:8080/api/service-bookings/getUserServiceBookings"
     );
   },
    
   async getServiceBookingById(id) {
-    return await axios.get(`http://localhost:8080/api/service-bookings/${id}`);
+    return await sendGet(`http://localhost:8080/api/service-bookings/${id}`);
   },
 
   // Tạo mới một đặt lịch
   async createServiceBooking(bookingData) {
-    return await axios.post(
+    return await sendPost(
       "http://localhost:8080/api/service-bookings/save",
       bookingData
     );
@@ -37,7 +26,7 @@ export const ServiceBookingService = {
 
   // Cập nhật một đặt lịch
   async updateServiceBooking(bookingData) {
-    return await axios.post(
+    return await sendPost(
       "http://localhost:8080/api/service-bookings/save",
       bookingData
     );
@@ -61,21 +50,21 @@ export const ServiceBookingService = {
 
   // Lấy đặt lịch theo ID dịch vụ
   async getServiceBookingsByServiceId(serviceId) {
-    return await axios.get(
+    return await sendGet(
       `http://localhost:8080/api/service-bookings/by-service/${serviceId}`
     );
   },
 
   // Lấy đặt lịch theo ID bệnh nhân
   async getServiceBookingsByPatientId(patientId) {
-    return await axios.get(
+    return await sendGet(
       `http://localhost:8080/api/service-bookings/by-patient/${patientId}`
     );
   },
 
   // Lấy đặt lịch theo trạng thái
   async getServiceBookingsByStatus(status) {
-    return await axios.get(
+    return await sendGet(
       `http://localhost:8080/api/service-bookings/by-status/${status}`
     );
   },

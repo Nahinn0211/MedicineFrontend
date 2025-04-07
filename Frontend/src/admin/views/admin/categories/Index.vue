@@ -3,7 +3,7 @@
   import { ref, onMounted } from 'vue';
   import { useConfirm } from 'primevue/useconfirm';
   import CreateForm from './Create.vue';
-  import { Categories } from '@admin/services/admin/Categories';
+  import { Categories } from '@admin/stores/admin/Categories';
   import { useToast } from 'primevue/usetoast';
   
   const confirm = useConfirm();

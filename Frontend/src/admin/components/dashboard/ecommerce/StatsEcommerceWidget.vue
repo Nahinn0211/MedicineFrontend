@@ -102,15 +102,13 @@
             <span class="font-semibold text-lg">Tổng doanh thu</span>
             <div class="flex justify-between items-start mt-4">
                 <div class="w-6/12">
-                    <span class="text-4xl font-bold text-surface-900 dark:text-surface-0">${{ totalRevenue.toLocaleString() }}</span>
+                    <span class="text-4xl font-bold text-surface-900 dark:text-surface-0">{{ totalRevenue.toLocaleString() }}Đ</span>
                     <div class="text-green-500">
                         <span class="font-medium">20%</span>
                         <i class="pi pi-arrow-up text-xs ml-2"></i>
                     </div>
                 </div>
-                <div class="w-6/12 text-right">
-                    <Knob v-model="knobValue" valueTemplate="90%" readonly :strokeWidth="2" :size="90" class="-mt-8 ml-8"></Knob>
-                </div>
+                
             </div>
         </div>
     </div>

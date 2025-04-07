@@ -9,8 +9,8 @@
     import Message from 'primevue/message';
     import { useVuelidate } from '@vuelidate/core';
     import { required, minValue } from '@vuelidate/validators';
-    import { Attributes } from '@admin/services/admin/AttributeService';
-    import { Medicines } from '@admin/services/admin/Medicines';
+    import { Attributes } from '@admin/stores/admin/AttributeService';
+    import { Medicines } from '@admin/stores/admin/Medicines';
 
     const props = defineProps({
       modelValue: {

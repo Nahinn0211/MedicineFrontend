@@ -1,12 +1,12 @@
-import axios from "axios";
+import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios';
 
 export const OrderService = {
   async getOrders() {
-    return await axios.get("http://localhost:8080/api/orders");
+    return await sendGet("http://localhost:8080/api/orders");
   },
 
   async getOrderById(id) {
-    return await axios.get(`http://localhost:8080/api/orders/${id}`);
+    return await sendGet(`http://localhost:8080/api/orders/${id}`);
   },
 
   async saveOrder(data) {
@@ -22,16 +22,16 @@ export const OrderService = {
       note: data.note
     };
     
-    const response = await axios.post("http://localhost:8080/api/orders/save", payload);
+    const response = await sendPost("http://localhost:8080/api/orders/save", payload);
     return response.data;
   },
 
   async deleteOrders(ids) {
-    const response = await axios.post("http://localhost:8080/api/orders/delete", ids);
+    const response = await sendPost("http://localhost:8080/api/orders/delete", ids);
     return response.data;
   },
 
   async findByOrderCode(orderCode) {
-    return await axios.get(`http://localhost:8080/api/orders/by-order-code/${encodeURIComponent(orderCode)}`);
+    return await sendGet(`http://localhost:8080/api/orders/by-order-code/${encodeURIComponent(orderCode)}`);
   }
 };

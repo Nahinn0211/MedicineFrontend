@@ -7,9 +7,9 @@
   import Textarea from 'primevue/textarea';
   import MultiSelect from 'primevue/multiselect';
   import FileUpload from 'primevue/fileupload';  
-  import { ListService } from '@admin/services/admin/ListService';
-  import { DoctorService } from '@admin/services/admin/DoctorService';
-  import { DoctorProfileService } from '@admin/services/admin/DoctorProfile';
+  import { ListService } from '@admin/stores/admin/ListService';
+  import { DoctorService } from '@admin/stores/admin/DoctorService';
+  import { DoctorProfileService } from '@admin/stores/admin/DoctorProfile';
   
   const props = defineProps({
       modelValue: Boolean,

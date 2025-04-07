@@ -69,22 +69,22 @@
       userRole.value = role;
     });
     </script>
-
-<template>
-    <div>
-
-        <div v-if="userRole === 'DOCTOR'" class="mb-4 p-4 bg-surface-50 rounded-lg">
-            <h2 class="text-xl font-semibold">Chào bạn</h2>
+    
+    <template>
+      <div>
+        
+         <div v-if="userRole === 'DOCTOR'" class="mb-4 p-4 bg-surface-50 rounded-lg">
+          <h2 class="text-xl font-semibold">Chào bạn</h2>
         </div>
-
-        <div v-if="userRole !== 'DOCTOR'" class="grid grid-cols-12 gap-8">
-            <StatsEcommerceWidget />
-            <div class="col-span-12 xl:col-span-12">
-                <RevenueOverviewWidget />
-            </div>
-            <div class="col-span-12 lg:col-span-7">
-                <RecentSalesWidget />
-            </div>
+        
+         <div v-if="userRole !== 'DOCTOR'" class="grid grid-cols-12 gap-8">
+          <StatsEcommerceWidget />
+          <div class="col-span-12 xl:col-span-12">
+            <RevenueOverviewWidget />
+          </div>
+          <div class="col-span-12 lg:col-span-7">
+            <RecentSalesWidget />
+          </div>
         </div>
-    </div>
-</template>
+      </div>
+    </template>

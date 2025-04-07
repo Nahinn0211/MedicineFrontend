@@ -8,11 +8,11 @@ import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
 
 // Services
-import { Medicines } from '@admin/services/admin/Medicines';
-import { Brands } from '@admin/services/admin/Brands';
-import { MedicineMediaService } from '@admin/services/admin/MedicineMedia';
-import { MedicineCategoryService } from '@admin/services/admin/MedicineCategory';
-import { Categories } from '@admin/services/admin/Categories';
+import { Medicines } from '@admin/stores/admin/Medicines';
+import { Brands } from '@admin/stores/admin/Brands';
+import { MedicineMediaService } from '@admin/stores/admin/MedicineMedia';
+import { MedicineCategoryService } from '@admin/stores/admin/MedicineCategory';
+import { Categories } from '@admin/stores/admin/Categories';
 
 const props = defineProps({
     modelValue: Boolean,

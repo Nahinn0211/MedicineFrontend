@@ -3,8 +3,8 @@
   import { useConfirm } from 'primevue/useconfirm';
   import { useToast } from 'primevue/usetoast';
   import CreateForm from './Create.vue';
-  import { Medicines } from '@admin/services/admin/Medicines';
-  import { MedicineMediaService } from '@admin/services/admin/MedicineMedia';
+  import { Medicines } from '@admin/stores/admin/Medicines';
+  import { MedicineMediaService } from '@admin/stores/admin/MedicineMedia';
 
   const confirm = useConfirm();
   const toast = useToast();

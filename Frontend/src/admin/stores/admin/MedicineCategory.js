@@ -1,15 +1,15 @@
 // src/services/admin/MedicineCategoryService.js
-import axios from "axios";
+import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios';
 
 export const MedicineCategoryService = {
   // Lấy tất cả liên kết thuốc-danh mục
   // async getMedicineCategories() {
-  //   return await axios.get("http://localhost:8080/api/medicine-categories");
+  //   return await sendGet("http://localhost:8080/api/medicine-categories");
   // },
 
   // Lấy liên kết thuốc-danh mục theo ID
   async getMedicineCategoryById(id) {
-    return await axios.get(`http://localhost:8080/api/medicine-categories/${id}`);
+    return await sendGet(`http://localhost:8080/api/medicine-categories/${id}`);
   },
 
   // Thêm mới hoặc cập nhật liên kết thuốc-danh mục
@@ -25,7 +25,7 @@ export const MedicineCategoryService = {
       payload.id = data.id;
     }
     
-    const response = await axios.post("http://localhost:8080/api/medicine-categories/save", payload);
+    const response = await sendPost("http://localhost:8080/api/medicine-categories/save", payload);
     return response.data;
   },
 
@@ -35,11 +35,11 @@ export const MedicineCategoryService = {
   },
   
    async getMedicineCategoryByMedicineId(medicineId) {
-    return await axios.get(`http://localhost:8080/api/medicine-categories/medicine/${medicineId}`);
+    return await sendGet(`http://localhost:8080/api/medicine-categories/medicine/${medicineId}`);
   },
   // Trong MedicineCategoryService
 async getMedicineCategories(medicineId) {
-  return await axios.get(`http://localhost:8080/api/medicine-categories/by-medicine/${medicineId}`);
+  return await sendGet(`http://localhost:8080/api/medicine-categories/by-medicine/${medicineId}`);
 }
 
 };

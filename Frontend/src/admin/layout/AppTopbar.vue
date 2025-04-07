@@ -1,8 +1,6 @@
 <script setup>
 import { useLayout } from '@admin/layout/composables/layout';
 import AppBreadcrumb from './AppBreadcrumb.vue';
-import { authService } from '@user/services/AuthService';
-import { useAuthStore } from '@user/stores/auth/useAuthStore';
 
 const { toggleMenu, layoutState, toggleConfigSidebar } = useLayout();
 
@@ -34,7 +32,7 @@ function showProfileSidebar() {
                 </li> -->
                 <li class="topbar-profile">
                     <Button type="button" class="topbar-sidebarbutton" @click="showProfileSidebar">
-                        <img src="@/assets/user/images/team/1.jpg" alt="Profile" />
+                        <img src="../../../public/demo/images/avatar/avatar.png" alt="Profile" />
                     </Button>
                 </li>
             </ul>

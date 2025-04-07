@@ -12,9 +12,9 @@
   import Dropdown from 'primevue/dropdown';
   import Tag from 'primevue/tag';
   import CreateUser from './Create.vue';
-  import { UserService } from '@admin/services/admin/User';
-  import { UserRoleService } from '@admin/services/admin/UserRole';
-  import { RoleService } from '@admin/services/admin/Role';
+  import { UserService } from '@admin/stores/admin/User';
+  import { UserRoleService } from '@admin/stores/admin/UserRole';
+  import { RoleService } from '@admin/stores/admin/Role';
   
   const confirm = useConfirm();
   const toast = useToast();

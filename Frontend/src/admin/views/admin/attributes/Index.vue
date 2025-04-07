@@ -7,7 +7,7 @@
     import Button from 'primevue/button';
     import Menu from 'primevue/menu';
     import InputText from 'primevue/inputtext';
-    import { Attributes } from '@admin/services/admin/AttributeService';
+    import { Attributes } from '@admin/stores/admin/AttributeService';
     import CreateForm from './Create.vue';
     
     // Component setup

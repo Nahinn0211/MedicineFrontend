@@ -7,8 +7,8 @@
   import InputNumber from 'primevue/inputnumber';
   import Calendar from 'primevue/calendar';
   import Dropdown from 'primevue/dropdown';
-  import { DiscountService } from '@admin/services/admin/Discount';
-  import { Medicines } from '@admin/services/admin/Medicines';
+  import { DiscountService } from '@admin/stores/admin/Discount';
+  import { Medicines } from '@admin/stores/admin/Medicines';
   
   const props = defineProps({
     modelValue: Boolean,

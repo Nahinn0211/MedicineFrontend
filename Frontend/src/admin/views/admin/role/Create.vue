@@ -1,48 +1,47 @@
-<!-- src/views/admin/roles/Create.vue -->
 <script setup>
   import { ref, computed, defineProps, defineEmits } from 'vue';
   import { useToast } from 'primevue/usetoast';
   import FormDialog from '@admin/components/FormDialog.vue';
   import InputText from 'primevue/inputtext';
-  import { RoleService } from '@admin/services/admin/Role';
+  import { 
+    RoleService, 
+    ROLE_DEFAULTS, 
+    validateRoleData 
+  } from '@admin/stores/admin/Role';
   
   const props = defineProps({
     modelValue: Boolean,
     data: {
       type: Object,
-      default: () => ({
-        id: 0,
-        name: ''
-      })
+      default: () => ({ ...ROLE_DEFAULTS })
     }
   });
   
   const emit = defineEmits(['update:modelValue', 'refreshList']);
   
+  // Computed properties
   const formVisible = computed({
     get: () => props.modelValue,
     set: (value) => emit('update:modelValue', value)
   });
-  
-  const isSubmitting = ref(false);
-  const toast = useToast();
   const isEditMode = computed(() => props.data.id !== 0);
   
+  // Reactive state
+  const isSubmitting = ref(false);
+  const toast = useToast();
+  
+  // Helper function để hiển thị thông báo
+  const showToast = (severity, summary, detail, life = 3000) => {
+    toast.add({ severity, summary, detail, life });
+  };
+  
+  // Hàm xác thực form
   const validateForm = () => {
-    const errors = [];
-    
-    if (!props.data.name || props.data.name.trim() === '') {
-      errors.push('Vui lòng nhập tên vai trò');
-    }
+    const errors = validateRoleData(props.data);
     
     if (errors.length > 0) {
       errors.forEach(error => {
-        toast.add({
-          severity: 'warn',
-          summary: 'Cảnh báo',
-          detail: error,
-          life: 3000
-        });
+        showToast('warn', 'Cảnh báo', error);
       });
       return false;
     }
@@ -50,41 +49,41 @@
     return true;
   };
   
+  // Đóng form
   const closeForm = () => {
     formVisible.value = false;
   };
   
+  // Lưu vai trò
   const saveRole = async () => {
     if (!validateForm()) return;
     
     try {
       isSubmitting.value = true;
       
-      // Sử dụng định dạng API đã cung cấp
       await RoleService.saveRole({
         id: props.data.id,
         name: props.data.name
       });
       
-      toast.add({
-        severity: 'success',
-        summary: 'Thành Công',
-        detail: isEditMode.value
+      showToast(
+        'success',
+        'Thành công',
+        isEditMode.value
           ? 'Đã cập nhật vai trò thành công'
-          : 'Đã thêm vai trò thành công',
-        life: 3000
-      });
+          : 'Đã thêm vai trò thành công'
+      );
       
       emit('refreshList');
       closeForm();
     } catch (error) {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Không thể lưu vai trò: ' + (error.response?.data?.message || error.message),
-        life: 3000
-      });
       console.error('Lỗi khi lưu vai trò:', error);
+      showToast(
+        'error',
+        'Lỗi',
+        'Không thể lưu vai trò: ' + 
+        (error.response?.data?.message || error.message)
+      );
     } finally {
       isSubmitting.value = false;
     }

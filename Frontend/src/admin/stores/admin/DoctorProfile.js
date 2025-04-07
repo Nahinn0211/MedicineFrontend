@@ -1,15 +1,15 @@
 // src/services/admin/DoctorProfileService.js
-import axios from "axios";
+import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios';
 
 export const DoctorProfileService = {
   // Lấy tất cả hồ sơ bác sĩ
   async getDoctorProfiles() {
-    return await axios.get("http://localhost:8080/api/doctor-profiles");
+    return await sendGet("http://localhost:8080/api/doctor-profiles");
   },
 
   // Lấy hồ sơ bác sĩ theo ID
   async getDoctorProfileById(id) {
-    return await axios.get(`http://localhost:8080/api/doctor-profiles/${id}`);
+    return await sendGet(`http://localhost:8080/api/doctor-profiles/${id}`);
   },
 
   // Thêm mới hoặc cập nhật hồ sơ bác sĩ
@@ -28,7 +28,7 @@ export const DoctorProfileService = {
       payload.id = data.id;
     }
     
-    const response = await axios.post("http://localhost:8080/api/doctor-profiles/save", payload);
+    const response = await sendPost("http://localhost:8080/api/doctor-profiles/save", payload);
     return response.data;
   },
 
@@ -39,6 +39,6 @@ export const DoctorProfileService = {
 
   // Xóa nhiều hồ sơ bác sĩ
   async deleteDoctorProfiles(ids) {
-    return await axios.post("http://localhost:8080/api/doctor-profiles/delete-multiple", ids);
+    return await sendPost("http://localhost:8080/api/doctor-profiles/delete-multiple", ids);
   }
 };

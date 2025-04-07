@@ -1,4 +1,4 @@
-import { i18n } from '@admin/locales';
+import { i18n } from '@/locales';
 import * as validators from '@vuelidate/validators';
 
 const { createI18nMessage } = validators;

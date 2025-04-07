@@ -4,10 +4,10 @@
   import FormDialog from '@admin/components/FormDialog.vue';
   import InputNumber from 'primevue/inputnumber';
   import Dropdown from 'primevue/dropdown';
-  import { ServiceBookingService } from '@admin/services/admin/ServiceBooking';
-  import { UserService } from '@admin/services/admin/User';
-  import { ListService } from '@admin/services/admin/ListService';
-  import { PatientProfileService } from '@admin/services/admin/PatientProfile';
+  import { ServiceBookingService } from '@admin/stores/admin/ServiceBooking';
+  import { UserService } from '@admin/stores/admin/User';
+  import { ListService } from '@admin/stores/admin/ListService';
+  import { PatientProfileService } from '@admin/stores/admin/PatientProfile';
   
   const props = defineProps({
     modelValue: Boolean,

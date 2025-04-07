@@ -9,8 +9,8 @@
     import Toast from 'primevue/toast';
     import ConfirmDialog from 'primevue/confirmdialog';
     import CreateDoctorProfile from './Create.vue';
-    import { DoctorProfileService } from '@admin/services/admin/DoctorProfile';
-    import { UserService } from '@admin/services/admin/User';
+    import { DoctorProfileService } from '@admin/stores/admin/DoctorProfile';
+    import { UserService } from '@admin/stores/admin/User';
     
     const confirm = useConfirm();
     const toast = useToast();

@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, computed, defineProps, defineEmits, watch } from 'vue';
+  import { ref, computed, defineProps, defineEmits, watch, onMounted } from 'vue';
   import { useToast } from 'primevue/usetoast';
   import FormDialog from '@admin/components/FormDialog.vue';
   import InputText from 'primevue/inputtext';
@@ -8,43 +8,37 @@
   import Checkbox from 'primevue/checkbox';
   import FileUpload from 'primevue/fileupload';
   import MultiSelect from 'primevue/multiselect';
-  import { UserService } from '@admin/services/admin/User';
-  import { RoleService } from '@admin/services/admin/Role';
-  import { UserRoleService } from '@admin/services/admin/UserRole';
+  import { 
+    UserService, 
+    USER_DEFAULTS, 
+    validateUserData,
+    normalizeUserData
+  } from '@admin/stores/admin/User';
+  import { RoleService } from '@admin/stores/admin/Role';
+  import { UserRoleService } from '@admin/stores/admin/UserRole';
   
   const props = defineProps({
     modelValue: Boolean,
     data: {
       type: Object,
-      default: () => ({
-        id: 0,
-        fullName: '',
-        phone: '',
-        address: '',
-        email: '',
-        password: '',
-        enabled: true,
-        locked: false,
-        countLock: 0,
-        avatar: null,
-        createdAt: null,
-        updatedAt: null
-      })
+      default: () => ({ ...USER_DEFAULTS })
     }
   });
   
   const emit = defineEmits(['update:modelValue', 'refreshList']);
   
+  // Computed properties
   const formVisible = computed({
     get: () => props.modelValue,
     set: (value) => emit('update:modelValue', value)
   });
+  const isEditMode = computed(() => props.data.id !== 0);
   
+  // Reactive state
   const isSubmitting = ref(false);
   const toast = useToast();
   const roles = ref([]);
   const selectedRoles = ref([]);
-  const isEditMode = computed(() => props.data.id !== 0);
   const uploadedFile = ref(null);
   const uploadedFilePath = ref(null);
   const fileUpload = ref(null);
@@ -57,23 +51,37 @@
       roles.value = response.data;
     } catch (error) {
       console.error('Lỗi khi lấy danh sách vai trò:', error);
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Không thể lấy danh sách vai trò',
-        life: 3000
-      });
+      showToast('error', 'Lỗi', 'Không thể lấy danh sách vai trò');
     }
   };
   
-   const fetchUserRoles = async () => {
+  // Fetch vai trò của người dùng
+  const fetchUserRoles = async () => {
     if (isEditMode.value) {
       try {
         const response = await UserRoleService.getUserRolesByUserId(props.data.id);
         selectedRoles.value = response.data.map(userRole => userRole.roleId);
       } catch (error) {
         console.error('Lỗi khi lấy vai trò của người dùng:', error);
+        showToast('error', 'Lỗi', 'Không thể lấy vai trò của người dùng');
       }
+    } else {
+      // Đặt vai trò mặc định cho người dùng mới (có thể là "USER")
+      const defaultRoleId = await getDefaultRoleId();
+      if (defaultRoleId) {
+        selectedRoles.value = [defaultRoleId];
+      }
+    }
+  };
+  
+  // Lấy ID của vai trò mặc định
+  const getDefaultRoleId = async () => {
+    try {
+      const response = await RoleService.getRoleByName("USER");
+      return response.data.id;
+    } catch (error) {
+      console.error('Lỗi khi lấy vai trò mặc định:', error);
+      return null;
     }
   };
   
@@ -82,9 +90,13 @@
     if (!isDataLoaded.value) {
       await fetchRoles();
       await fetchUserRoles();
-
       isDataLoaded.value = true;
     }
+  };
+  
+  // Helper function để hiển thị thông báo
+  const showToast = (severity, summary, detail, life = 3000) => {
+    toast.add({ severity, summary, detail, life });
   };
   
   // Xử lý khi form hiển thị
@@ -101,7 +113,7 @@
         if (props.data.avatar.startsWith('http')) {
           uploadedFilePath.value = props.data.avatar;
         } else {
-          uploadedFilePath.value = `http://localhost:8080/uploads/users/${props.data.avatar}`;
+          uploadedFilePath.value = `${API_BASE_URL}/uploads/users/${props.data.avatar}`;
         }
       } else {
         uploadedFilePath.value = null;
@@ -109,42 +121,23 @@
     } else {
       // Reset khi đóng form
       selectedRoles.value = [];
+      uploadedFile.value = null;
+      uploadedFilePath.value = null;
     }
   });
   
+  // Hàm xác thực form
   const validateForm = () => {
-    const errors = [];
+    const errors = validateUserData(props.data, isEditMode.value);
     
-    if (!props.data.fullName || props.data.fullName.trim() === '') {
-      errors.push('Vui lòng nhập họ tên');
-    }
-    
-    if (!props.data.email || props.data.email.trim() === '') {
-      errors.push('Vui lòng nhập email');
-    } else if (!/\S+@\S+\.\S+/.test(props.data.email)) {
-      errors.push('Email không hợp lệ');
-    }
-    
-    if (!isEditMode.value && (!props.data.password || props.data.password.trim() === '')) {
-      errors.push('Vui lòng nhập mật khẩu');
-    } else if (!isEditMode.value && props.data.password.length < 6) {
-      errors.push('Mật khẩu phải có ít nhất 6 ký tự');
-    }
-    
-    if (!props.data.phone || props.data.phone.trim() === '') {
-      errors.push('Vui lòng nhập số điện thoại');
-    } else if (!/^\d{10,11}$/.test(props.data.phone)) {
-      errors.push('Số điện thoại không hợp lệ');
+    // Thêm kiểm tra riêng cho vai trò
+    if (selectedRoles.value.length === 0) {
+      errors.push('Vui lòng chọn ít nhất một vai trò');
     }
     
     if (errors.length > 0) {
       errors.forEach(error => {
-        toast.add({
-          severity: 'warn',
-          summary: 'Cảnh báo',
-          detail: error,
-          life: 3000
-        });
+        showToast('warn', 'Cảnh báo', error);
       });
       return false;
     }
@@ -152,17 +145,18 @@
     return true;
   };
   
+  // Đóng form
   const closeForm = () => {
     uploadedFile.value = null;
     uploadedFilePath.value = null;
     formVisible.value = false;
   };
   
+  // Xử lý file upload
   const onSelect = (event) => {
     if (event.files && event.files.length > 0) {
       uploadedFile.value = event.files[0];
       
-      // Tạo URL xem trước
       const reader = new FileReader();
       reader.onload = (e) => {
         uploadedFilePath.value = e.target.result;
@@ -183,12 +177,7 @@
       reader.readAsDataURL(file);
     }
     
-    toast.add({ 
-      severity: 'info', 
-      summary: 'Thành công', 
-      detail: 'Đã tải ảnh lên', 
-      life: 3000 
-    });
+    showToast('info', 'Thành công', 'Đã tải ảnh lên');
   };
   
   const onClear = () => {
@@ -196,97 +185,80 @@
     uploadedFile.value = null;
   };
   
+  // Lưu người dùng
   const saveUser = async () => {
     if (!validateForm()) return;
     
     try {
       isSubmitting.value = true;
       
-      // Chuẩn bị dữ liệu người dùng theo đúng định dạng API yêu cầu
       const userData = {
         fullName: props.data.fullName,
-        phone: props.data.phone,
-        address: props.data.address,
+        phone: props.data.phone || '',
+        address: props.data.address || '',
         email: props.data.email,
-        password: props.data.password || '', // Đảm bảo password luôn có giá trị
-        enabled: props.data.enabled,
-        locked: props.data.locked,
+        enabled: props.data.enabled === undefined ? true : props.data.enabled,
+        locked: props.data.locked === undefined ? false : props.data.locked,
         countLock: props.data.countLock || 0
       };
       
-      // Chỉ thêm ID vào dữ liệu khi ở chế độ cập nhật (ID > 0)
+      // Xử lý mật khẩu khác nhau cho người dùng mới và cập nhật
       if (isEditMode.value) {
         userData.id = props.data.id;
+        if (props.data.password && props.data.password.trim() !== '') {
+          userData.password = props.data.password;
+        }
+      } else {
+        userData.password = props.data.password;
       }
       
-      // Chuẩn bị FormData để gửi dữ liệu kèm file
-      const formData = new FormData();
-      formData.append('user', JSON.stringify(userData));
+      let response;
       
       if (uploadedFile.value) {
+        // Với avatar file
+        const formData = new FormData();
+        formData.append('user', JSON.stringify(userData));
         formData.append('file', uploadedFile.value);
+        
+        // Thêm danh sách roleIds sử dụng cú pháp mảng
+        selectedRoles.value.forEach(roleId => {
+          formData.append('roleIds[]', roleId);
+        });
+        
+        response = await UserService.saveUserWithAvatar(formData);
+      } else {
+        // Không có avatar file
+        const userWithRoles = {
+          user: userData,
+          roleIds: selectedRoles.value
+        };
+        
+        response = await UserService.saveUser(userWithRoles);
       }
       
-      // Gọi API lưu thông tin người dùng
-      const response = await UserService.saveUserWithAvatar(formData);
-      const userId = response.data.id;
-      
-      // Cập nhật vai trò của người dùng
-      if (selectedRoles.value.length > 0) {
-        try {
-          // Xóa tất cả vai trò hiện tại (trong trường hợp cập nhật)
-          if (isEditMode.value) {
-            const currentRoles = await UserRoleService.getUserRolesByUserId(userId);
-            await Promise.all(
-              currentRoles.data.map(userRole => UserRoleService.deleteUserRole(userRole.id))
-            );
-          }
-          
-          // Thêm vai trò mới theo đúng định dạng API yêu cầu
-          await Promise.all(
-            selectedRoles.value.map(roleId => 
-              UserRoleService.saveUserRole({
-                userId: userId,
-                roleId: roleId
-              })
-            )
-          );
-        } catch (error) {
-          console.error('Lỗi khi cập nhật vai trò:', error);
-          toast.add({
-            severity: 'warn',
-            summary: 'Cảnh báo',
-            detail: 'Đã lưu người dùng nhưng có lỗi khi cập nhật vai trò',
-            life: 3000
-          });
-        }
-      }
-      
-      toast.add({
-        severity: 'success',
-        summary: 'Thành Công',
-        detail: isEditMode.value
-          ? 'Đã cập nhật người dùng thành công'
-          : 'Đã thêm người dùng thành công',
-        life: 3000
-      });
+      showToast(
+        'success',
+        'Thành công',
+        isEditMode.value
+          ? 'Cập nhật người dùng thành công'
+          : 'Thêm người dùng mới thành công'
+      );
       
       emit('refreshList');
       closeForm();
     } catch (error) {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Không thể lưu người dùng: ' + (error.response?.data?.message || error.message),
-        life: 3000
-      });
       console.error('Lỗi khi lưu người dùng:', error);
+      showToast(
+        'error',
+        'Lỗi',
+        'Không thể lưu người dùng: ' + 
+        (error.response?.data?.error || error.response?.data?.message || error.message)
+      );
     } finally {
       isSubmitting.value = false;
     }
   };
- 
- </script>
+  </script>
   
   <template>
     <FormDialog
@@ -300,7 +272,7 @@
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-4 md:flex-row">
           <div class="flex flex-col gap-1 w-full md:w-1/2">
-            <label for="fullName" class="font-semibold">Họ và tên:</label>
+            <label for="fullName" class="font-semibold">Họ và tên: <span class="text-red-500">*</span></label>
             <InputText
               id="fullName"
               v-model="props.data.fullName"
@@ -310,7 +282,7 @@
           </div>
           
           <div class="flex flex-col gap-1 w-full md:w-1/2">
-            <label for="email" class="font-semibold">Email:</label>
+            <label for="email" class="font-semibold">Email: <span class="text-red-500">*</span></label>
             <InputText
               id="email"
               v-model="props.data.email"
@@ -334,7 +306,7 @@
           
           <div class="flex flex-col gap-1 w-full md:w-1/2">
             <label for="password" class="font-semibold">
-              Mật khẩu:
+              Mật khẩu: <span v-if="!isEditMode" class="text-red-500">*</span>
               <span v-if="isEditMode" class="text-sm text-gray-500">(Để trống nếu không thay đổi)</span>
             </label>
             <Password
@@ -359,7 +331,7 @@
         </div>
         
         <div class="flex flex-col gap-1 w-full">
-          <label for="roles" class="font-semibold">Vai trò:</label>
+          <label for="roles" class="font-semibold">Vai trò: <span class="text-red-500">*</span></label>
           <MultiSelect
             id="roles"
             v-model="selectedRoles"
@@ -369,6 +341,7 @@
             placeholder="Chọn vai trò"
             class="w-full"
             :loading="!isDataLoaded"
+            :disabled="!isDataLoaded"
           />
         </div>
         

@@ -9,7 +9,7 @@ const adminRoutes = [
         path: '',
         name: 'e-commerce',
         meta: {
-          breadcrumb: ['E-Commerce Dashboard']
+          breadcrumb: ['Dashboard']
         },
         component: () => import('@admin/views/dashboards/Ecommerce.vue')
       },
@@ -20,14 +20,6 @@ const adminRoutes = [
           breadcrumb: ['Profile']
         },
         component: () => import('@admin/views/doctor/Index.vue')
-      },
-      {
-        path: '/consultation/call/:consultationCode',
-        name: 'Call Consultation',
-        component: () => import('@admin/views/doctor/Call.vue'),
-        meta: {
-          title: 'Tư vấn trực tuyến',
-        },
       },
       {
         path: 'order',

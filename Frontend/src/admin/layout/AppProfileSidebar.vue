@@ -49,7 +49,7 @@ const userMenuItems = [
 
 function logout() {
   authStore.logout();
-  router.push('/login');
+  router.push({ name: 'Login'});
 }
 </script>
 

@@ -5,7 +5,7 @@
     import Dropdown from 'primevue/dropdown';
     import InputText from 'primevue/inputtext';
     import FileUpload from 'primevue/fileupload';
-    import { Categories } from '@admin/services/admin/Categories';
+    import { Categories } from '@admin/stores/admin/Categories';
     
     const props = defineProps({
         modelValue: Boolean,

@@ -1,7 +1,7 @@
 <script setup>
   import { ref, onMounted } from 'vue';
   import { useConfirm } from 'primevue/useconfirm';
-   import { ServiceBookingService } from '@admin/services/admin/ServiceBooking';
+   import { ServiceBookingService } from '@admin/stores/admin/ServiceBooking';
   import { useToast } from 'primevue/usetoast';
   import Toast from 'primevue/toast';
   import ConfirmDialog from 'primevue/confirmdialog';

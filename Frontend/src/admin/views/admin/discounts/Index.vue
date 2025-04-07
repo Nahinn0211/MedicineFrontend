@@ -9,8 +9,8 @@
     import Toast from 'primevue/toast';
     import ConfirmDialog from 'primevue/confirmdialog';
     import CreateForm from './Create.vue';
-    import { DiscountService } from '@admin/services/admin/Discount';
-    import { Medicines } from '@admin/services/admin/Medicines';
+    import { DiscountService } from '@admin/stores/admin/Discount';
+    import { Medicines } from '@admin/stores/admin/Medicines';
     
     const confirm = useConfirm();
     const toast = useToast();

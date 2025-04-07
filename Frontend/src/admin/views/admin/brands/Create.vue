@@ -5,7 +5,7 @@ import FormDialog from '@admin/components/FormDialog.vue';
 import Dropdown from 'primevue/dropdown';
 import InputText from 'primevue/inputtext';
 import FileUpload from 'primevue/fileupload';
-import { Brands } from '@admin/services/admin/Brands';
+import { Brands } from '@admin/stores/admin/Brands';
 
 const props = defineProps({
     modelValue: Boolean,

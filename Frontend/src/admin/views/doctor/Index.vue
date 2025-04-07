@@ -5,12 +5,26 @@
         <div class="p-card profile-card">
           <div class="p-card-header text-center">
             <div class="profile-header">
-              <img :src="user.avatar ||
-                'https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png'
-                " class="profile-avatar" alt="Avatar" />
+              <img
+                :src="
+                  user.avatar ||
+                  'https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png'
+                "
+                class="profile-avatar"
+                alt="Avatar"
+              />
               <div class="upload-section mt-2">
-                <input type="file" ref="fileInput" @change="handleFileChange" accept="image/*" class="hidden-input" />
-                <button class="p-button p-button-rounded p-button-outlined p-button-sm" @click="triggerFileInput">
+                <input
+                  type="file"
+                  ref="fileInput"
+                  @change="handleFileChange"
+                  accept="image/*"
+                  class="hidden-input"
+                />
+                <button
+                  class="p-button p-button-rounded p-button-outlined p-button-sm"
+                  @click="triggerFileInput"
+                >
                   <i class="pi pi-camera"></i> Thay đổi
                 </button>
               </div>
@@ -62,8 +76,7 @@
       <div class="p-col-12 p-md-8">
         <div class="p-tabview">
           <div class="p-tabview-nav">
-            <div v-for="(tab, index) in tabs" :key="index" class="p-tabview-nav-link"
-              :class="{ 'p-highlight': activeTabIndex === index }" @click="activeTabIndex = index">
+            <div v-for="(tab, index) in tabs" :key="index" class="p-tabview-nav-link" :class="{ 'p-highlight': activeTabIndex === index }" @click="activeTabIndex = index">
               {{ tab.header }}
             </div>
           </div>
@@ -84,18 +97,30 @@
                     <div class="p-grid">
                       <div class="p-col-12 field">
                         <label for="currentPassword">Mật khẩu hiện tại</label>
-                        <input id="currentPassword" v-model="passwordForm.currentPassword" type="password"
-                          class="p-inputtext w-full" />
+                        <input
+                          id="currentPassword"
+                          v-model="passwordForm.currentPassword"
+                          type="password"
+                          class="p-inputtext w-full"
+                        />
                       </div>
                       <div class="p-col-12 field">
                         <label for="newPassword">Mật khẩu mới</label>
-                        <input id="newPassword" v-model="passwordForm.newPassword" type="password"
-                          class="p-inputtext w-full" />
+                        <input
+                          id="newPassword"
+                          v-model="passwordForm.newPassword"
+                          type="password"
+                          class="p-inputtext w-full"
+                        />
                       </div>
                       <div class="p-col-12 field">
                         <label for="confirmPassword">Xác nhận mật khẩu</label>
-                        <input id="confirmPassword" v-model="passwordForm.confirmPassword" type="password"
-                          class="p-inputtext w-full" />
+                        <input
+                          id="confirmPassword"
+                          v-model="passwordForm.confirmPassword"
+                          type="password"
+                          class="p-inputtext w-full"
+                        />
                       </div>
                       <div class="p-col-12">
                         <button type="submit" class="p-button">
@@ -125,23 +150,9 @@
                 <Column field="id" header="Mã lịch hẹn"></Column>
                 <Column field="patientName" header="Bệnh nhân"></Column>
                 <Column field="doctorName" header="Bác sĩ"></Column>
-                <Column field="appointmentDate" header="Ngày hẹn" :body="(row) => formatDate(row.appointmentDate)">
-                </Column>
+                <Column field="appointmentDate" header="Ngày hẹn" :body="(row) => formatDate(row.appointmentDate)"></Column>
                 <Column field="appointmentTime" header="Giờ hẹn"></Column>
-                <Column header="Trạng thái">
-                  <template #body="slotProps">
-                    {{ consultations[slotProps.data.id] && consultations[slotProps.data.id].status ?
-                      consultations[slotProps.data.id].status : 'N/A' }}
-                  </template>
-                </Column>
-                <Column header="Hành động">
-                  <template #body="slotProps">
-                    <button class="p-button p-button-primary p-button-sm" @click="startConsultation(consultations[slotProps.data.id].consultationCode, consultations[slotProps.data.id].appointmentId, consultations[slotProps.data.id].id)">
-                      <i class="pi pi-video mr-2"></i>
-                      Tư vấn
-                    </button>
-                  </template>
-                </Column>
+                <Column field="status" header="Trạng thái"></Column>
               </DataTable>
             </div>
             <div v-if="activeTabIndex === 4" class="p-tabview-panel">
@@ -158,11 +169,11 @@
   </div>
 </template>
 
-
 <script>
-import { Profile } from '@admin/services/admin/Profile';
-import { Appointments } from '@admin/services/admin/Appointments';
-import { ServiceBookingService } from '@admin/services/admin/ServiceBooking';
+   import { Profile } from '@admin/stores/admin/Profile';  
+ import { Appointments } from '@admin/stores/admin/Appointments';
+ 
+ import { ServiceBookingService } from '@admin/stores/admin/ServiceBooking';  
 export default {
   name: "ProfilePage",
   data() {
@@ -173,7 +184,9 @@ export default {
         { header: "Bảo mật" },
         { header: "Lịch sử đặt dịch vụ" },
         { header: "Danh sách lịch hẹn" },
+
         { header: "Hoạt động gần đây" }
+
       ],
       user: {
         fullName: "",
@@ -197,8 +210,7 @@ export default {
         birthdayStr: "",
         bio: "",
       },
-      appointment: {
-        id: "",
+      appointment : {
         patientName: "",
         doctorName: "",
         patientEmail: "",
@@ -208,22 +220,13 @@ export default {
         appointmentTime: "",
         appointmentDate: "",
       },
-      consultation: {
-        id: "",
-        doctorId: "",
-        patientId: "",
-        appointmentId: "",
-        consultationCode: "",
-      },
-      consultations: {},
-      appointments: [],
       passwordForm: {
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       },
       activities: [],
-      serviceBookings: [],
+      serviceBookings: [], // Thêm danh sách đặt dịch vụ
       toast: {
         visible: false,
         severity: "success",
@@ -233,45 +236,132 @@ export default {
       },
     };
   },
+ 
+  // Thêm các phương thức này vào methods
+formatDateTime(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+},
+
+formatCurrency(amount) {
+  return new Intl.NumberFormat('vi-VN', { 
+    style: 'currency', 
+    currency: 'VND',
+    maximumFractionDigits: 0
+  }).format(amount);
+},
+
+translatePaymentMethod(method) {
+  const methodMap = {
+    'CASH': 'Tiền mặt',
+    'BANKING': 'Chuyển khoản',
+    'PAYPAL': 'PayPal',
+    'VISA': 'Thẻ Visa/Master',
+    'MOMO': 'Ví MoMo'
+  };
+  return methodMap[method] || method;
+},
+
+getStatusClass(status) {
+  return `status-${status}`;
+},
   mounted() {
     this.fetchProfileData();
     this.fetchServiceBookings();
     this.fetchAppointments();
+
   },
   methods: {
-    startConsultation(consultationCode, appointmentId, consutationId) {
-      this.$router.push(`/consultation/call/${consultationCode}?appointmentId=${appointmentId}?consultationId=${consutationId}`);
-    },
+    async fetchAppointments() {
+  try {
+    const response = await Appointments.getAppointmentsByIdDoctor();
+    this.appointments = response.data;
+   } catch (error) {
+    this.showToast('error', 'Lỗi', 'Không thể tải danh sách lịch hẹn');
+    console.error(error);
+  }
+}
+,
+    async fetchProfileData() {
+  try {
+    const response = await Profile.getProfile();
+    const profileData = response.data;
+    
+    // Cập nhật thông tin người dùng
+    this.user = {
+      id: profileData.id,
+      fullName: profileData.fullName,
+      firstName: profileData.fullName.split(' ').slice(1).join(' '),
+      lastName: profileData.fullName.split(' ')[0],
+      email: profileData.email,
+      role: profileData.currentRole,
+      avatar: profileData.avatar,  
+      phone: profileData.phone,  
+      address: profileData.address,  
+      joinDate: new Date(),
+      birthday: null,
+      bio: "",
+      doctorProfile: profileData.doctorProfile,
+      doctorProfileId: profileData.doctorProfileId
+    };
 
-    formatDateTime(dateStr) {
-      if (!dateStr) return "";
-      const date = new Date(dateStr);
-      return date.toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    },
+    // Khởi tạo form
+    this.initUserForm();
+    
+     
+    // Thêm hoạt động
+    this.activities.push({
+      title: "Tải thông tin cá nhân",
+      description: "Đã tải thông tin cá nhân thành công",
+      date: new Date(),
+    });
+    
+   } catch (error) {
+    this.showToast('error', 'Lỗi', 'Không thể tải thông tin cá nhân');
+    console.error(error);
+  }
+},
+    
+async fetchServiceBookings() {
+  try {
+    const response = await ServiceBookingService.getUserServiceBookings();
+    this.serviceBookings = response.data;
+    
+    if (this.serviceBookings && this.serviceBookings.length > 0) {
+      // Thêm hoạt động từ các đặt dịch vụ vào timeline
+      const bookingActivities = this.serviceBookings.map(booking => ({
+        title: `Đặt dịch vụ: ${booking.serviceName}`,
+        description: `Trạng thái: ${this.translateBookingStatus(booking.status)}`,
+        date: new Date(booking.createdAt)
+      }));
 
-    formatCurrency(amount) {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-        maximumFractionDigits: 0
-      }).format(amount);
-    },
-
-    formatDateForSystem(dateStr) {
-      if (!dateStr) return "";
-      const dateParts = dateStr.split('/');
-      if (dateParts.length === 3) {
-        return `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-      }
-      return dateStr;
-    },
-
+      this.activities.push(...bookingActivities);
+      
+      // Sắp xếp hoạt động theo thời gian mới nhất đầu tiên
+      this.activities.sort((a, b) => b.date - a.date);
+      
+      this.showToast('success', 'Thành công', `Đã tải ${this.serviceBookings.length} lịch sử đặt dịch vụ`);
+    }
+  } catch (error) {
+    this.showToast('error', 'Lỗi', 'Không thể tải danh sách dịch vụ đã đặt');
+    console.error(error);
+  }
+},
+formatCurrency(amount) {
+  return new Intl.NumberFormat('vi-VN', { 
+    style: 'currency', 
+    currency: 'VND',
+    maximumFractionDigits: 0
+  }).format(amount);
+},
+    
     translateBookingStatus(status) {
       const statusMap = {
         'PENDING': 'Đang chờ',
@@ -281,116 +371,6 @@ export default {
       };
       return statusMap[status] || status;
     },
-
-    translatePaymentMethod(method) {
-      const methodMap = {
-        'CASH': 'Tiền mặt',
-        'BANKING': 'Chuyển khoản',
-        'PAYPAL': 'PayPal',
-        'VISA': 'Thẻ Visa/Master',
-        'MOMO': 'Ví MoMo'
-      };
-      return methodMap[method] || method;
-    },
-
-    getStatusClass(status) {
-      return `status-${status}`;
-    },
-
-    async fetchAppointments() {
-      try {
-        const response = await Appointments.getAppointmentsByIdDoctor();
-        this.appointments = response.data;
-        console.log("Lịch hẹn đã tải:", response.data);
-
-        if (this.appointments && this.appointments.length > 0) {
-          for (const appointment of this.appointments) {
-            if (appointment.id) {
-              await this.fetchConsultation(appointment.id);
-            }
-          }
-        }
-      } catch (error) {
-        this.showToast('error', 'Lỗi', 'Không thể tải danh sách lịch hẹn');
-        console.error(error);
-      }
-    },
-
-    async fetchConsultation(appointmentId) {
-      try {
-        const response = await Appointments.getConsultationById(appointmentId);
-        // Store consultation in the consultations object, keyed by appointmentId
-        this.consultations[appointmentId] = response.data;
-        console.log(`Loaded consultation for appointment ${appointmentId}:`, response.data);
-      } catch (error) {
-        console.error(`Không thể tải thông tin tư vấn cho lịch hẹn ${appointmentId}:`, error);
-      }
-    },
-    async fetchProfileData() {
-      try {
-        const response = await Profile.getProfile();
-        const profileData = response.data;
-
-        // Cập nhật thông tin người dùng
-        this.user = {
-          id: profileData.id,
-          fullName: profileData.fullName,
-          firstName: profileData.fullName.split(' ').slice(1).join(' '),
-          lastName: profileData.fullName.split(' ')[0],
-          email: profileData.email,
-          role: profileData.currentRole,
-          avatar: profileData.avatar,
-          phone: profileData.phone,
-          address: profileData.address,
-          joinDate: new Date(),
-          birthday: null,
-          bio: "",
-          doctorProfile: profileData.doctorProfile,
-          doctorProfileId: profileData.doctorProfileId
-        };
-
-        // Khởi tạo form
-        this.initUserForm();
-
-
-        // Thêm hoạt động
-        this.activities.push({
-          title: "Tải thông tin cá nhân",
-          description: "Đã tải thông tin cá nhân thành công",
-          date: new Date(),
-        });
-
-      } catch (error) {
-        this.showToast('error', 'Lỗi', 'Không thể tải thông tin cá nhân');
-        console.error(error);
-      }
-    },
-
-    async fetchServiceBookings() {
-      try {
-        const response = await ServiceBookingService.getUserServiceBookings();
-        this.serviceBookings = response.data;
-
-        if (this.serviceBookings && this.serviceBookings.length > 0) {
-          // Thêm hoạt động từ các đặt dịch vụ vào timeline
-          const bookingActivities = this.serviceBookings.map(booking => ({
-            title: `Đặt dịch vụ: ${booking.serviceName}`,
-            description: `Trạng thái: ${this.translateBookingStatus(booking.status)}`,
-            date: new Date(booking.createdAt)
-          }));
-
-          this.activities.push(...bookingActivities);
-
-          // Sắp xếp hoạt động theo thời gian mới nhất đầu tiên
-          this.activities.sort((a, b) => b.date - a.date);
-
-          this.showToast('success', 'Thành công', `Đã tải ${this.serviceBookings.length} lịch sử đặt dịch vụ`);
-        }
-      } catch (error) {
-        this.showToast('error', 'Lỗi', 'Không thể tải danh sách dịch vụ đã đặt');
-        console.error(error);
-      }
-    },
     initUserForm() {
       this.userForm = {
         firstName: this.user.firstName,
@@ -398,7 +378,7 @@ export default {
         email: this.user.email,
         phone: this.user.phone,
         address: this.user.address
-      };
+       };
     },
     formatDate(date) {
       if (!date) return "";
@@ -901,7 +881,6 @@ export default {
     transform: translateX(100%);
     opacity: 0;
   }
-
   to {
     transform: translateX(0);
     opacity: 1;
@@ -914,3 +893,4 @@ export default {
   }
 }
 </style>
+

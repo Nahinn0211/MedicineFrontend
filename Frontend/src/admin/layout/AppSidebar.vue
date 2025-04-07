@@ -34,7 +34,7 @@ function onAnchorToggle() {
         <div class="sidebar-header">
             <router-link :to="{ name: 'e-commerce' }" class="app-logo">
                 <div class="app-logo-container">
-                    <img src="@/assets/user/images/logo.png" alt="Logo" class="app-logo-normal" 
+                    <img src="../assets/images/logo SL 2.jpg" alt="Logo" class="app-logo-normal" 
                     style="width: 124px; height: 62px; object-fit: contain" />
                 </div>
 

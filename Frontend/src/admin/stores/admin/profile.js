@@ -1,18 +1,9 @@
-import axios from "axios";
+import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios';
 
 export const Profile = {
-  getHeaders() {
-    const token = localStorage.getItem("token");
-
-    return {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-  },
+   
   async getProfile() {
-    return await axios.get("http://localhost:8080/api/profile/me", {
-      headers: this.getHeaders(),
-    });
+    return await sendGet("http://localhost:8080/api/profile/me");
   },
 //   async updateProfile(profileData) {
 //     return await axios.put("http://localhost:8080/api/profile/update", profileData, {

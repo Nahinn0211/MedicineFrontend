@@ -6,7 +6,7 @@ import InputText from "primevue/inputtext";
 import InputNumber from "primevue/inputnumber";
 import Dropdown from "primevue/dropdown";
 import Textarea from "primevue/textarea";
-import { OrderService } from "@admin/services/admin/Order";
+import { OrderService } from "@admin/stores/admin/Order";
 
 const props = defineProps({
   modelValue: Boolean,

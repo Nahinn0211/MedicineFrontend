@@ -1,65 +1,65 @@
-import axios from 'axios';
+import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios';
 
 const API_URL = 'http://localhost:8080/api';
 
 export const ConsultationService = {
    async getConsultations() {
-    return await axios.get(`${API_URL}/consultations`);
+    return await sendGet(`${API_URL}/consultations`);
   },
 
   // Lấy chi tiết buổi tư vấn theo ID
   async getConsultationById(id) {
-    return await axios.get(`${API_URL}/consultations/${id}`);
+    return await sendGet(`${API_URL}/consultations/${id}`);
   },
 
   // Tạo hoặc cập nhật buổi tư vấn
   async saveConsultation(consultationData) {
-    return await axios.post(`${API_URL}/consultations`, consultationData);
+    return await sendPost(`${API_URL}/consultations`, consultationData);
   },
 
   // Xóa buổi tư vấn
   async deleteConsultation(id) {
-    return await axios.delete(`${API_URL}/consultations/${id}`);
+    return await sendDelete(`${API_URL}/consultations/${id}`);
   },
 
   // Lấy danh sách buổi tư vấn theo ID bệnh nhân
   async getConsultationsByPatientId(patientId) {
-    return await axios.get(`${API_URL}/consultations/patient/${patientId}`);
+    return await sendGet(`${API_URL}/consultations/patient/${patientId}`);
   },
 
   // Bắt đầu buổi tư vấn
   async startConsultationSession(sessionData) {
-    return await axios.post(`${API_URL}/consultations/start-session`, sessionData);
+    return await sendPost(`${API_URL}/consultations/start-session`, sessionData);
   },
 
   // Kết thúc buổi tư vấn
   async endConsultationSession(sessionData) {
-    return await axios.post(`${API_URL}/consultations/end-session`, sessionData);
+    return await sendPost(`${API_URL}/consultations/end-session`, sessionData);
   },
 
   // Bật/tắt video stream
   async toggleVideoStream(consultationId, userId, isEnabled) {
-    return await axios.post(`${API_URL}/consultations/${consultationId}/toggle-video?userId=${userId}&isEnabled=${isEnabled}`);
+    return await sendPost(`${API_URL}/consultations/${consultationId}/toggle-video?userId=${userId}&isEnabled=${isEnabled}`);
   },
 
   // Lấy phiên đang hoạt động
   async getActiveSession(consultationId) {
-    return await axios.get(`${API_URL}/consultations/${consultationId}/active-session`);
+    return await sendGet(`${API_URL}/consultations/${consultationId}/active-session`);
   },
 
   // Gửi tin nhắn chat
   async sendChatMessage(messageData) {
-    return await axios.post(`${API_URL}/consultations/chat`, messageData);
+    return await sendPost(`${API_URL}/consultations/chat`, messageData);
   },
 
   // Lấy lịch sử chat
   async getChatHistory(historyData) {
-    return await axios.post(`${API_URL}/consultations/chat-history`, historyData);
+    return await sendPost(`${API_URL}/consultations/chat-history`, historyData);
   },
 
   // Đánh dấu tin nhắn đã đọc
   async markMessagesAsRead(consultationId, userId) {
-    return await axios.post(`${API_URL}/consultations/${consultationId}/mark-read?userId=${userId}`);
+    return await sendPost(`${API_URL}/consultations/${consultationId}/mark-read?userId=${userId}`);
   },
 
   // Các hàm tiện ích

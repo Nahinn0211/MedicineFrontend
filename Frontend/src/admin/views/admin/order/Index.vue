@@ -8,7 +8,7 @@
   import Toast from 'primevue/toast';
   import ConfirmDialog from 'primevue/confirmdialog';
   import CreateForm from './Create.vue';
-  import { OrderService } from '@admin/services/admin/Order';
+  import { OrderService } from '@admin/stores/admin/Order';
   
   const confirm = useConfirm();
   const toast = useToast();

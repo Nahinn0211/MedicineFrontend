@@ -6,8 +6,8 @@
   import InputText from 'primevue/inputtext';
   import InputNumber from 'primevue/inputnumber';
   import Dropdown from 'primevue/dropdown';
-  import { DoctorProfileService } from '@admin/services/admin/DoctorProfile';
-  import { UserService } from '@admin/services/admin/User';
+  import { DoctorProfileService } from '@admin/stores/admin/DoctorProfile';
+  import { UserService } from '@admin/stores/admin/User';
   
   const props = defineProps({
     modelValue: Boolean,
