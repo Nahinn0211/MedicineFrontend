@@ -117,7 +117,13 @@ export const sendPatch = (url, payload) => {
 
 export const sendDelete = (url, payload) => {
   return new Promise((resolve, reject) => {
-    const queryParamString = payload ? `?${new URLSearchParams(payload).toString()}` : '';
+    let queryParamString = '';
+    if (Array.isArray(payload)) {
+      queryParamString = '?' + payload.map(id => `ids=${id}`).join('&');
+    } 
+    else if (payload && typeof payload === 'object') {
+      queryParamString = '?' + buildURLQueryFromObject(payload);
+    }
 
     axios.delete(`${url}${queryParamString}`)
       .then((response) => {

@@ -1,12 +1,22 @@
 <script setup>
+import { ref, onMounted } from 'vue';
 import { useLayout } from '@admin/layout/composables/layout';
 import AppBreadcrumb from './AppBreadcrumb.vue';
+import { authService } from '@user/services/AuthService'
+import { useAuthStore } from '@user/stores/auth/useAuthStore'
 
 const { toggleMenu, layoutState, toggleConfigSidebar } = useLayout();
+const userData = ref(null);
+const authStore = useAuthStore()
+const image = ref('');
 
 function showProfileSidebar() {
     layoutState.profileSidebarVisible = !layoutState.profileSidebarVisible;
 }
+onMounted(async () => {
+  await authStore.initializeAuth();
+  userData.value = await authService.getDataUser(authService.state.user.id);
+})
 </script>
 
 <template>
@@ -32,7 +42,7 @@ function showProfileSidebar() {
                 </li> -->
                 <li class="topbar-profile">
                     <Button type="button" class="topbar-sidebarbutton" @click="showProfileSidebar">
-                        <img src="../../../public/demo/images/avatar/avatar.png" alt="Profile" />
+                        <img :src="userData?.avatar" alt="Profile" />
                     </Button>
                 </li>
             </ul>

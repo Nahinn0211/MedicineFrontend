@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios'; 
+import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios';
 import { API_BASE_URL } from '@/config/apiConfig';
 
- export const USER_DEFAULTS = {
+export const USER_DEFAULTS = {
   id: 0,
   fullName: '',
   phone: '',
@@ -20,43 +20,43 @@ import { API_BASE_URL } from '@/config/apiConfig';
 // Hàm chuẩn hóa dữ liệu người dùng
 export const normalizeUserData = (user) => {
   const normalizedUser = { ...user };
-  
+
   // Chuyển đổi chuỗi ngày thành đối tượng Date nếu cần
   if (normalizedUser.createdAt && typeof normalizedUser.createdAt === 'string') {
     normalizedUser.createdAt = new Date(normalizedUser.createdAt);
   }
-  
+
   if (normalizedUser.updatedAt && typeof normalizedUser.updatedAt === 'string') {
     normalizedUser.updatedAt = new Date(normalizedUser.updatedAt);
   }
-  
+
   return normalizedUser;
 };
 
 // Hàm kiểm tra tính hợp lệ của dữ liệu người dùng
 export const validateUserData = (data, isEditMode = false) => {
   const errors = [];
-  
+
   if (!data.fullName || data.fullName.trim() === '') {
     errors.push('Vui lòng nhập họ tên');
   }
-  
+
   if (!data.email || data.email.trim() === '') {
     errors.push('Vui lòng nhập email');
   } else if (!/\S+@\S+\.\S+/.test(data.email)) {
     errors.push('Email không hợp lệ');
   }
-  
+
   if (!isEditMode && (!data.password || data.password.trim() === '')) {
     errors.push('Vui lòng nhập mật khẩu');
   } else if (!isEditMode && data.password && data.password.length < 6) {
     errors.push('Mật khẩu phải có ít nhất 6 ký tự');
   }
-  
+
   if (data.phone && !/^\d{10,11}$/.test(data.phone)) {
     errors.push('Số điện thoại không hợp lệ');
   }
-  
+
   return errors;
 };
 
@@ -76,11 +76,11 @@ export const formatDate = (dateString) => {
 // Hàm xử lý URL avatar
 export const getAvatarUrl = (avatar) => {
   if (!avatar) return null;
-  
+
   if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
     return avatar;
   }
-  
+
   return `${API_BASE_URL}/uploads/users/${avatar}`;
 };
 
@@ -104,7 +104,7 @@ export const UserService = {
   async saveUserWithAvatar(formData) {
     // Sửa lỗi với roleIds, đảm bảo mỗi phần tử được thêm với cú pháp "roleIds[]"
     const fixedFormData = new FormData();
-    
+
     // Lấy ra các phần tử từ formData ban đầu
     for (let [key, value] of formData.entries()) {
       if (key === 'roleIds') {
@@ -114,7 +114,7 @@ export const UserService = {
         fixedFormData.append(key, value);
       }
     }
-    
+
     return await axios.post(`${API_BASE_URL}/users/save`, fixedFormData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -122,14 +122,11 @@ export const UserService = {
     });
   },
 
-  // Delete user by ID
-  async deleteUser(id) {
-    return await sendDelete(`${API_BASE_URL}/users`, [id]);
-  },
-
   // Delete multiple users
   async deleteUsers(ids) {
-    return await sendDelete(`${API_BASE_URL}/users`, ids);
+    return await axios.delete(`${API_BASE_URL}/users`, {
+      data: ids
+    });
   },
 
   // Find user by email
@@ -176,39 +173,41 @@ export const UserService = {
   async getAllUsersRoleUser() {
     return await sendGet(`${API_BASE_URL}/users/listUserByUser`);
   },
-  
-  // Login user
-  async login(credentials) {
-    return await sendPost(`${API_BASE_URL}/auth/login`, credentials);
-  },
 
-  // Register new user
-  async registerUser(data) {
-    try {
-      // Prepare user data according to API requirements
-      const payload = {
-        fullName: data.fullName || '',
-        email: data.email || '',
-        password: data.password || '',
-        phone: data.phone || '',
-        address: data.address || '',
-        enabled: data.enabled !== undefined ? data.enabled : true,
-        locked: data.locked !== undefined ? data.locked : false,
-        countLock: data.countLock || 0
-      };
-      
-      // Call register API
-      const response = await sendPost(`${API_BASE_URL}/auth/register`, payload);
-      
-      // Save token if provided
-      if (response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
-      }
-      
-      return response;
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
-  }
+  /*-----------------------------------------------------------------*/
+  // Phần này ở phía user anh đã tạo rồi ở phía admin không khởi tạo nữa
+  // // Login user
+  // async login(credentials) {
+  //   return await sendPost(`${API_BASE_URL}/auth/login`, credentials);
+  // },
+
+  // // Register new user
+  // async registerUser(data) {
+  //   try {
+  //     // Prepare user data according to API requirements
+  //     const payload = {
+  //       fullName: data.fullName || '',
+  //       email: data.email || '',
+  //       password: data.password || '',
+  //       phone: data.phone || '',
+  //       address: data.address || '',
+  //       enabled: data.enabled !== undefined ? data.enabled : true,
+  //       locked: data.locked !== undefined ? data.locked : false,
+  //       countLock: data.countLock || 0
+  //     };
+
+  //     // Call register API
+  //     const response = await sendPost(`${API_BASE_URL}/auth/register`, payload);
+
+  //     // Save token if provided
+  //     if (response.data && response.data.token) {
+  //       localStorage.setItem('token', response.data.token);
+  //     }
+
+  //     return response;
+  //   } catch (error) {
+  //     console.error('Registration error:', error);
+  //     throw error;
+  //   }
+  // }
 };
