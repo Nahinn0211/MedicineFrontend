@@ -8,6 +8,7 @@
                         <img :src="user.avatar || '/default-avatar.png'" alt="User Avatar" class="profile-avatar" />
                         <div class="avatar-overlay">
                             <span class="upload-icon"><i class="fas fa-camera"></i></span>
+                            <span class="upload-text">{{ user.avatar ? 'Thay đổi ảnh' : 'Tải ảnh lên' }}</span>
                         </div>
                         <input type="file" ref="avatarInput" class="hidden" accept="image/*"
                             @change="handleAvatarChange" />
@@ -363,6 +364,7 @@ import { authService } from '@user/services/AuthService'
 import { useAuthStore } from '@user/stores/auth/useAuthStore'
 import { ref, reactive, onMounted, computed } from 'vue'
 import { loadScript } from '@paypal/paypal-js';
+import { userService } from '@user/services/UserService';
 const authStore = useAuthStore()
 
 const user = ref({
@@ -442,6 +444,7 @@ const isSubmitting = ref(false)
 const isPasswordValid = ref(false)
 const isValidTopup = ref(false)
 const paypal = ref(null)
+const avatarInput = ref(null)
 
 const quickAmounts = ref([50000, 100000, 200000, 500000])
 const paymentMethods = ref([
@@ -627,10 +630,11 @@ async function loadData() {
 }
 
 function formatCurrency(amount) {
+    const numAmount = Number(amount) || 0;
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND'
-    }).format(amount || 0)
+    }).format(numAmount);
 }
 async function saveInfo() {
     try {
@@ -734,17 +738,18 @@ const initPayPalTopup = () => {
             },
             onApprove: async (data, actions) => {
                 try {
-                    // Capture the payment
                     await actions.order.capture();
-
-                    // Top-up the user's balance after PayPal payment success
                     const patientData = await authService.getDataPatient(authStore.user.id);
-                    const newBalance = patientData.accountBalance + topupAmount.value;
+                    const newBalance = Number(patientData.accountBalance) + Number(topupAmount.value);
                     const updatedBalance = await authService.updateBalance(patientData.id, newBalance);
-                    patientProfile.value.accountBalance = updatedBalance;
+                    if (typeof updatedBalance === 'object' && updatedBalance !== null) {
+                        patientProfile.value.accountBalance = Number(updatedBalance.accountBalance || 0);
+                    } else {
+                        patientProfile.value.accountBalance = Number(updatedBalance || 0);
+                    }
 
                     showNotification('Nạp tiền thành công!', 'success');
-                    closeModal(); // Close the top-up modal
+                    closeModal();
                 } catch (error) {
                     showNotification('Error processing payment. Please try again.', 'error');
                     console.error('Error in PayPal approval:', error);
@@ -776,7 +781,58 @@ onMounted(async () => {
     }
 });
 
+const triggerFileInput = () => {
+    // Chủ động kích hoạt input file khi người dùng click vào avatar
+    avatarInput.value.click();
+};
 
+const handleAvatarChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Kiểm tra kích thước file (giới hạn 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+        showNotification('Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 2MB', 'error');
+        return;
+    }
+
+    // Kiểm tra loại file
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc GIF', 'error');
+        return;
+    }
+
+    try {
+        // Hiển thị trạng thái đang tải
+        isSubmitting.value = true;
+
+        // Gọi API upload avatar
+        const response = await userService.uploadUserImage(authStore.user.id, file);
+
+        // Cập nhật avatar mới - Fix: Check if response exists before accessing properties
+        if (response) {
+            // If response has data property with avatar, use it; otherwise try to use response directly
+            if (response.data && response.data.avatar) {
+                user.value.avatar = response.data.avatar;
+            } else if (response.avatar) {
+                user.value.avatar = response.avatar;
+            } else {
+                throw new Error('Invalid response format: avatar not found');
+            }
+
+            showNotification('Cập nhật ảnh đại diện thành công!', 'success');
+        } else {
+            throw new Error('No response received from server');
+        }
+    } catch (error) {
+        console.error('Lỗi khi tải ảnh lên:', error);
+        showNotification('Không thể tải ảnh lên. Vui lòng thử lại.', 'error');
+    } finally {
+        isSubmitting.value = false;
+    }
+};
 
 // Phơi các phương thức và trạng thái cần sử dụng trong template
 defineExpose({
@@ -826,6 +882,89 @@ defineExpose({
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+.avatar-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 2.5rem;
+    box-shadow: var(--shadow-subtle);
+    border: 4px solid var(--background-card);
+    transition: var(--transition-smooth);
+    cursor: pointer;
+}
+
+.avatar-container:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-hover);
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.avatar-container:hover .profile-avatar {
+    transform: scale(1.1);
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.avatar-container:hover .avatar-overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.upload-icon {
+    opacity: 0;
+    font-size: 28px;
+    margin-bottom: 0.5rem;
+    transition: opacity 0.3s ease;
+}
+
+.upload-text {
+    opacity: 0;
+    font-size: 14px;
+    font-weight: 500;
+    transition: opacity 0.3s ease;
+    text-align: center;
+    padding: 0 0.5rem;
+}
+
+.avatar-container:hover .upload-icon,
+.avatar-container:hover .upload-text {
+    opacity: 1;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .avatar-container {
+        margin-right: 0;
+        margin-bottom: 1.5rem;
+        width: 140px;
+        height: 140px;
+    }
 }
 
 body {
@@ -1177,7 +1316,7 @@ textarea {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background-color: #2980b9;
 }
 
 .btn-primary:hover:not(:disabled) {
