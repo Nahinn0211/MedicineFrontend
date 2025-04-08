@@ -16,6 +16,7 @@
   } from '@admin/stores/admin/User';
   import { RoleService } from '@admin/stores/admin/Role';
   import { UserRoleService } from '@admin/stores/admin/UserRole';
+  import { API_BASE_URL } from '@/config/apiConfig';
   
   const props = defineProps({
     modelValue: Boolean,
@@ -85,28 +86,33 @@
     }
   };
   
-  // Hàm tải tất cả dữ liệu cần thiết
-  const loadAllData = async () => {
-    if (!isDataLoaded.value) {
-      await fetchRoles();
-      await fetchUserRoles();
-      isDataLoaded.value = true;
-    }
-  };
-  
-  // Helper function để hiển thị thông báo
-  const showToast = (severity, summary, detail, life = 3000) => {
-    toast.add({ severity, summary, detail, life });
-  };
-  
-  // Xử lý khi form hiển thị
+  // Thay đổi phần watch formVisible
   watch(formVisible, async (newVal) => {
     if (newVal) {
       // Reset trạng thái khi mở form
       isDataLoaded.value = false;
       
-      // Load dữ liệu
-      await loadAllData();
+      // Load danh sách vai trò
+      await fetchRoles();
+      
+      // Thiết lập vai trò đã chọn
+      if (isEditMode.value) {
+        if (props.data.roles && props.data.roles.length > 0) {
+          // Lấy danh sách ID vai trò từ dữ liệu người dùng đã có
+          selectedRoles.value = props.data.roles.map(role => role.id);
+        } else {
+          // Trường hợp không có dữ liệu vai trò trong props.data, gọi API
+          await fetchUserRoles();
+        }
+      } else {
+        // Đặt vai trò mặc định cho người dùng mới
+        const defaultRoleId = await getDefaultRoleId();
+        if (defaultRoleId) {
+          selectedRoles.value = [defaultRoleId];
+        }
+      }
+      
+      isDataLoaded.value = true;
       
       // Xử lý hiển thị avatar nếu có
       if (isEditMode.value && props.data.avatar) {
@@ -125,6 +131,32 @@
       uploadedFilePath.value = null;
     }
   });
+  
+  // Cập nhật hàm loadAllData để phù hợp với logic mới
+  const loadAllData = async () => {
+    if (!isDataLoaded.value) {
+      await fetchRoles();
+      
+      if (isEditMode.value && (!props.data.roles || props.data.roles.length === 0)) {
+        await fetchUserRoles();
+      } else if (isEditMode.value && props.data.roles && props.data.roles.length > 0) {
+        selectedRoles.value = props.data.roles.map(role => role.id);
+      } else {
+        // Người dùng mới, đặt vai trò mặc định
+        const defaultRoleId = await getDefaultRoleId();
+        if (defaultRoleId) {
+          selectedRoles.value = [defaultRoleId];
+        }
+      }
+      
+      isDataLoaded.value = true;
+    }
+  };
+  
+  // Helper function để hiển thị thông báo
+  const showToast = (severity, summary, detail, life = 3000) => {
+    toast.add({ severity, summary, detail, life });
+  };
   
   // Hàm xác thực form
   const validateForm = () => {
@@ -192,7 +224,10 @@
     try {
       isSubmitting.value = true;
       
+      // Chuẩn bị dữ liệu người dùng theo UserDTO.SaveUserDTO format
+      // Không bao gồm createdAt và updatedAt
       const userData = {
+        id: props.data.id || 0,
         fullName: props.data.fullName,
         phone: props.data.phone || '',
         address: props.data.address || '',
@@ -200,40 +235,42 @@
         enabled: props.data.enabled === undefined ? true : props.data.enabled,
         locked: props.data.locked === undefined ? false : props.data.locked,
         countLock: props.data.countLock || 0
+        // Không thêm createdAt và updatedAt
       };
       
       // Xử lý mật khẩu khác nhau cho người dùng mới và cập nhật
-      if (isEditMode.value) {
-        userData.id = props.data.id;
-        if (props.data.password && props.data.password.trim() !== '') {
-          userData.password = props.data.password;
-        }
-      } else {
+      if (!isEditMode.value) {
+        userData.password = props.data.password;
+      } else if (props.data.password && props.data.password.trim() !== '') {
         userData.password = props.data.password;
       }
       
       let response;
       
       if (uploadedFile.value) {
-        // Với avatar file
+        // Với avatar file - Chuẩn bị FormData đúng định dạng theo API
         const formData = new FormData();
+        
+        // Chuyển đổi user object thành JSON string
         formData.append('user', JSON.stringify(userData));
+        
+        // Thêm file
         formData.append('file', uploadedFile.value);
         
-        // Thêm danh sách roleIds sử dụng cú pháp mảng
+        // Thêm danh sách vai trò
         selectedRoles.value.forEach(roleId => {
           formData.append('roleIds[]', roleId);
         });
         
         response = await UserService.saveUserWithAvatar(formData);
       } else {
-        // Không có avatar file
-        const userWithRoles = {
+        // Không có avatar file - Gửi dữ liệu JSON
+        const payload = {
           user: userData,
           roleIds: selectedRoles.value
         };
         
-        response = await UserService.saveUser(userWithRoles);
+        response = await UserService.saveUser(payload);
       }
       
       showToast(
