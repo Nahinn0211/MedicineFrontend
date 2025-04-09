@@ -1,25 +1,28 @@
 <script setup>
   import { ref, onMounted } from 'vue';
   import { useConfirm } from 'primevue/useconfirm';
-   import { ServiceBookingService } from '@admin/stores/admin/ServiceBooking';
+  import { ServiceBookingService } from '@admin/stores/admin/ServiceBooking';
   import { useToast } from 'primevue/usetoast';
   import Toast from 'primevue/toast';
   import ConfirmDialog from 'primevue/confirmdialog';
   import DataTable from 'primevue/datatable';
   import Column from 'primevue/column';
   import Button from 'primevue/button';
+  import EditForm from './EditForm.vue';
+  import DetailModal from './DetailModal.vue';
   
   const confirm = useConfirm();
   const toast = useToast();
   const serviceBookings = ref([]);
   const selectedServiceBookings = ref([]);
   const isLoading = ref(false);
-  const form = ref({ visible: false, data: {} });
+  const editForm = ref({ visible: false, data: {} });
+  const detailModal = ref({ visible: false, booking: {} });
   
   const columns = ref([
     { field: 'id', label: 'ID', visible: true },
-    { field: 'serviceId', label: 'Dịch vụ', visible: true },
-    { field: 'patientId', label: 'Bệnh nhân', visible: true },
+    { field: 'service.name', label: 'Dịch vụ', visible: true },
+    { field: 'patient.user.fullName', label: 'Bệnh nhân', visible: true },
     { field: 'totalPrice', label: 'Tổng giá', visible: true },
     { field: 'paymentMethod', label: 'Phương thức thanh toán', visible: true },
     { field: 'status', label: 'Trạng thái', visible: true },
@@ -47,35 +50,44 @@
   
   onMounted(fetchServiceBookings);
   
-  const openForm = async (data = null) => {
-    if (data && data.id) {
-      try {
-        // Lấy chi tiết để đảm bảo dữ liệu mới nhất
-        const response = await ServiceBookingService.getServiceBookingById(data.id);
-        form.value = {
-          visible: true,
-          data: { ...response.data }
-        };
-      } catch (error) {
-        toast.add({
-          severity: 'error',
-          summary: 'Lỗi',
-          detail: 'Không thể tải thông tin đặt lịch',
-          life: 3000
-        });
-      }
-    } else {
-      form.value = {
+  const openEditForm = async (data) => {
+    try {
+      // Lấy chi tiết đặt lịch mới nhất
+      const response = await ServiceBookingService.getServiceBookingById(data.id);
+      editForm.value = {
         visible: true,
-        data: {
-          id: 0,
-          serviceId: 0,
-          patientId: 0,
-          totalPrice: 0,
-          paymentMethod: 'PAYPAL',
-          status: 'PENDING'
-        }
+        data: response.data
       };
+    } catch (error) {
+      console.error('Error fetching service booking details:', error);
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Không thể tải thông tin đặt lịch',
+        life: 3000
+      });
+    }
+  };
+  
+  const openDetailModal = async (data) => {
+    try {
+      isLoading.value = true;
+      // Lấy thông tin chi tiết đặt lịch
+      const response = await ServiceBookingService.getServiceBookingById(data.id);
+      detailModal.value = {
+        visible: true,
+        booking: response.data
+      };
+    } catch (error) {
+      console.error('Error fetching booking details:', error);
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Không thể tải thông tin chi tiết đặt lịch',
+        life: 3000
+      });
+    } finally {
+      isLoading.value = false;
     }
   };
   
@@ -159,7 +171,8 @@
       'BANK_TRANSFER': 'Chuyển khoản',
       'CASH': 'Tiền mặt',
       'MOMO': 'Ví MoMo',
-      'VNPAY': 'VNPay'
+      'VNPAY': 'VNPay',
+      'BALANCEACCOUNT': 'Số dư tài khoản'
     };
     return methodMap[method] || method;
   };
@@ -223,29 +236,33 @@
       
       <Column selectionMode="multiple" style="width: 3rem"></Column>
       
-       <Column field="id" header="ID" sortable style="width: 5rem"></Column>
+      <Column field="id" header="ID" sortable style="width: 5rem"></Column>
       
-       <Column field="serviceName" header="Dịch vụ" sortable>
-         
+      <Column field="service.name" header="Dịch vụ" sortable>
+        <template #body="{ data }">
+          {{ data.service?.name || '---' }}
+        </template>
       </Column>
       
-       <Column field="patientName" header="Bệnh nhân" sortable>
-        
+      <Column field="patient.user.fullName" header="Bệnh nhân" sortable>
+        <template #body="{ data }">
+          {{ data.patient?.user?.fullName || '---' }}
+        </template>
       </Column>
       
-       <Column field="totalPrice" header="Tổng giá" sortable>
+      <Column field="totalPrice" header="Tổng giá" sortable>
         <template #body="{ data }">
           <span class="font-semibold text-red-600">{{ formatPrice(data.totalPrice) }}</span>
         </template>
       </Column>
       
-       <Column field="paymentMethod" header="Thanh toán" sortable>
+      <Column field="paymentMethod" header="Thanh toán" sortable>
         <template #body="{ data }">
           {{ getPaymentMethodLabel(data.paymentMethod) }}
         </template>
       </Column>
       
-       <Column field="status" header="Trạng thái" sortable>
+      <Column field="status" header="Trạng thái" sortable>
         <template #body="{ data }">
           <span :class="['px-2 py-1 rounded-lg text-xs font-medium inline-block', getStatusClass(data.status)]">
             {{ getStatusLabel(data.status) }}
@@ -253,23 +270,53 @@
         </template>
       </Column>
       
-       <Column field="createdAt" header="Ngày tạo" sortable>
+      <Column field="createdAt" header="Ngày tạo" sortable>
         <template #body="{ data }">
           {{ formatDate(data.createdAt) }}
         </template>
       </Column>
       
-       <Column header="Tác vụ" style="width: 10rem">
+      <Column header="Tác vụ" style="width: 12rem">
         <template #body="{ data }">
           <div class="flex gap-2">
-            <Button icon="pi pi-pencil" outlined tooltip="Chỉnh sửa" @click="openForm(data)" />
-            <Button icon="pi pi-trash" outlined severity="danger" tooltip="Xóa" @click="handleDelete(data.id)" />
+            <Button 
+              icon="pi pi-eye" 
+              outlined
+              severity="info"
+              tooltip="Xem chi tiết" 
+              @click="openDetailModal(data)" 
+            />
+            <Button 
+              icon="pi pi-pencil" 
+              outlined 
+              tooltip="Cập nhật trạng thái và giá" 
+              @click="openEditForm(data)" 
+            />
+            <Button 
+              icon="pi pi-trash" 
+              outlined 
+              severity="danger" 
+              tooltip="Xóa" 
+              @click="handleDelete(data.id)" 
+            />
           </div>
         </template>
       </Column>
     </DataTable>
     
-   </div>
+    <!-- Form cập nhật -->
+    <EditForm 
+      v-model:modelValue="editForm.visible" 
+      :data="editForm.data" 
+      @refreshList="fetchServiceBookings" 
+    />
+    
+    <!-- Modal xem chi tiết -->
+    <DetailModal
+      v-model:visible="detailModal.visible"
+      :booking="detailModal.booking"
+    />
+  </div>
 </template>
 
 <style scoped>
@@ -277,4 +324,3 @@
   padding: 1rem;
 }
 </style>
-

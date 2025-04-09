@@ -1,8 +1,8 @@
-import axios from 'axios';
 import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios'; 
 import { API_BASE_URL } from '@/config/apiConfig';
+import axios from 'axios';
 
- export const USER_DEFAULTS = {
+export const USER_DEFAULTS = {
   id: 0,
   fullName: '',
   phone: '',
@@ -84,6 +84,25 @@ export const getAvatarUrl = (avatar) => {
   return `${API_BASE_URL}/uploads/users/${avatar}`;
 };
 
+// Hàm chuẩn hóa dữ liệu người dùng theo định dạng SaveUserDTO
+// Loại bỏ createdAt và updatedAt khi gửi lên server
+const prepareUserData = (userData) => {
+  // Đảm bảo dữ liệu đúng định dạng SaveUserDTO và loại bỏ createdAt, updatedAt
+  return {
+    id: userData.id || 0,
+    fullName: userData.fullName || '',
+    email: userData.email || '',
+    password: userData.password || null,
+    phone: userData.phone || '',
+    address: userData.address || '',
+    avatar: userData.avatar || null,
+    enabled: userData.enabled === undefined ? true : userData.enabled,
+    locked: userData.locked === undefined ? false : userData.locked,
+    countLock: userData.countLock || 0
+    // Không thêm createdAt và updatedAt
+  };
+};
+
 export const UserService = {
   // Get all users
   async getUsers() {
@@ -97,69 +116,119 @@ export const UserService = {
 
   // Create or update user (JSON data)
   async saveUser(data) {
-    return await sendPost(`${API_BASE_URL}/users`, data);
+    // Khi gửi trong định dạng JSON, cần tách riêng user và roleIds
+    const { user, roleIds } = data;
+    
+    // Chuẩn bị payload đúng định dạng
+    const payload = {
+      user: prepareUserData(user || data), // Hỗ trợ cả 2 cách truyền dữ liệu
+      roleIds: roleIds || (data.roleIds || [])
+    };
+    
+    return await sendPost(`${API_BASE_URL}/users`, payload);
   },
 
-  // Create or update user with avatar (multipart form data)
+  // Save user with avatar
   async saveUserWithAvatar(formData) {
-    // Sửa lỗi với roleIds, đảm bảo mỗi phần tử được thêm với cú pháp "roleIds[]"
-    const fixedFormData = new FormData();
-    
-    // Lấy ra các phần tử từ formData ban đầu
-    for (let [key, value] of formData.entries()) {
-      if (key === 'roleIds') {
-        // Đổi tên key để backend hiểu đây là một mảng
-        fixedFormData.append('roleIds[]', value);
-      } else {
-        fixedFormData.append(key, value);
+    // Kiểm tra xem formData đã có dữ liệu user dưới dạng JSON string chưa
+    let hasUserJson = false;
+    for (let [key] of formData.entries()) {
+      if (key === 'user') {
+        hasUserJson = true;
+        break;
       }
     }
     
-    return await axios.post(`${API_BASE_URL}/users/save`, fixedFormData, {
+    // Nếu chưa có, tạo formData mới với định dạng đúng
+    if (!hasUserJson) {
+      const newFormData = new FormData();
+      
+      // Lấy dữ liệu user từ formData cũ
+      let userData = {};
+      let fileData = null;
+      let roleIds = [];
+      
+      for (let [key, value] of formData.entries()) {
+        if (key === 'file') {
+          fileData = value;
+        } else if (key.includes('roleIds')) {
+          roleIds.push(value);
+        } else if (key !== 'createdAt' && key !== 'updatedAt') { // Loại bỏ createdAt và updatedAt
+          // Các trường khác thuộc về user
+          userData[key] = value;
+        }
+      }
+      
+      // Thêm dữ liệu user dưới dạng JSON string
+      newFormData.append('user', JSON.stringify(prepareUserData(userData)));
+      
+      // Thêm file nếu có
+      if (fileData) {
+        newFormData.append('file', fileData);
+      }
+      
+      // Thêm roleIds nếu có
+      roleIds.forEach(roleId => {
+        newFormData.append('roleIds[]', roleId);
+      });
+      
+      formData = newFormData;
+    }
+    
+    // Sử dụng custom config để đặt đúng Content-Type
+    const config = {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
-    });
+    };
+    
+    // Đảm bảo axios interceptor vẫn thêm token vào header
+    const token = localStorage.getItem('access-token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return await sendPost(`${API_BASE_URL}/users/save`, formData, config);
   },
 
-  // Delete user by ID
-  async deleteUser(id) {
-    return await sendDelete(`${API_BASE_URL}/users`, [id]);
-  },
-
-  // Delete multiple users
+  // Xóa người dùng - một hàm duy nhất để xóa một hoặc nhiều người dùng
   async deleteUsers(ids) {
-    return await sendDelete(`${API_BASE_URL}/users`, ids);
+    // Đảm bảo ids luôn là mảng
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    // Gửi danh sách id trong request body
+    return await sendDelete(`${API_BASE_URL}/users`, idArray);
   },
 
   // Find user by email
   async findByEmail(email) {
-    return await sendGet(`${API_BASE_URL}/users/by-email?email=${encodeURIComponent(email)}`);
+    return await sendGet(`${API_BASE_URL}/users/by-email`, { email });
   },
 
   // Search users by different criteria
   async searchUsers(params) {
-    return await sendGet(`${API_BASE_URL}/users/search`, { params });
+    return await sendGet(`${API_BASE_URL}/users/search`, params);
   },
 
   // Get users by enabled status
   async getUsersByEnabled(enabled) {
-    return await sendGet(`${API_BASE_URL}/users/by-enabled?enabled=${enabled}`);
+    return await sendGet(`${API_BASE_URL}/users/by-enabled`, { enabled });
   },
 
   // Get users by locked status
   async getUsersByLocked(locked) {
-    return await sendGet(`${API_BASE_URL}/users/by-locked?locked=${locked}`);
+    return await sendGet(`${API_BASE_URL}/users/by-locked`, { locked });
   },
 
   // Change user password
   async changePassword(userId, oldPassword, newPassword) {
-    return await sendPut(`${API_BASE_URL}/users/change-password/${userId}`, null, {
+    // Sử dụng params trong config thay vì chuỗi query
+    const config = {
       params: {
         oldPassword,
         newPassword
       }
-    });
+    };
+    return await sendPut(`${API_BASE_URL}/users/change-password/${userId}`, null, config);
   },
 
   // Get user profiles (doctors, patients, etc.)
@@ -186,23 +255,14 @@ export const UserService = {
   async registerUser(data) {
     try {
       // Prepare user data according to API requirements
-      const payload = {
-        fullName: data.fullName || '',
-        email: data.email || '',
-        password: data.password || '',
-        phone: data.phone || '',
-        address: data.address || '',
-        enabled: data.enabled !== undefined ? data.enabled : true,
-        locked: data.locked !== undefined ? data.locked : false,
-        countLock: data.countLock || 0
-      };
+      const payload = prepareUserData(data);
       
       // Call register API
       const response = await sendPost(`${API_BASE_URL}/auth/register`, payload);
       
       // Save token if provided
       if (response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('access-token', response.data.token);
       }
       
       return response;

@@ -8,10 +8,43 @@ export const axios = axiosRequest.create({
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': '*',
     'Access-Control-Allow-Headers': '*',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json'  
   }
 });
 
+// Thêm interceptor để tự động thêm token vào mỗi request
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Thêm interceptor để xử lý response
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Kiểm tra nếu lỗi 401 (Unauthorized) thì đăng xuất
+    if (error.response && error.response.status === 401) {
+      // Xóa token
+      localStorage.removeItem('token');
+      
+      // Có thể thêm logic chuyển hướng đến trang đăng nhập ở đây
+      // window.location.href = '/login';
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 const isObject = (a) => {
   if ((!!a) && (a.constructor === Object)) {
@@ -19,9 +52,11 @@ const isObject = (a) => {
   }
   return false;
 };
+
 const _st = (z, g) => {
   return "" + (g != "" ? "[" : "") + z + (g != "" ? "]" : "");
 };
+
 const buildURLQueryFromObject = (params, skipObjects, prefix) => {
   if (skipObjects === void 0) {
     skipObjects = false;
@@ -49,27 +84,18 @@ const buildURLQueryFromObject = (params, skipObjects, prefix) => {
 };
 
 const handleResponse = (resolve, reject, response) => {
-  
-  // if (response?.data?.status == 200) {
-    resolve(response);
-  // } else {
-  //   reject(response.data);
-  // }
+  resolve(response);
 };
 
 const handleError = (reject, error) => {
-  // error = Object.assign(error, {
-  //   status: 500,
-  //   message: 'Có lỗi kết nối với máy chủ hệ thống',
-  // });
-
   reject(error);
 };
 
-export const sendGet = (url, payload = null) => {
+// Sửa lại hàm sendGet để có thể truyền config tùy chỉnh
+export const sendGet = (url, params = null, config = {}) => {
   return new Promise((resolve, reject) => {
-    const queryParamString = payload ? `?${buildURLQueryFromObject(payload)}` : '';
-    axios.get(`${url}${queryParamString}`)
+    const queryParamString = params ? `?${buildURLQueryFromObject(params)}` : '';
+    axios.get(`${url}${queryParamString}`, config)
       .then((response) => {
         handleResponse(resolve, reject, response);
       })
@@ -79,9 +105,10 @@ export const sendGet = (url, payload = null) => {
   });
 };
 
-export const sendPost = (url, payload) => {
+// Sửa lại hàm sendPost để có thể truyền config tùy chỉnh
+export const sendPost = (url, payload, config = {}) => {
   return new Promise((resolve, reject) => {
-    axios.post(url, payload)
+    axios.post(url, payload, config)
       .then((response) => {
         handleResponse(resolve, reject, response);
       })
@@ -91,7 +118,8 @@ export const sendPost = (url, payload) => {
   });
 };
 
-export const sendPut = (url, payload, config) => {
+// Sửa lại hàm sendPut
+export const sendPut = (url, payload, config = {}) => {
   return new Promise((resolve, reject) => {
     axios.put(url, payload, config)
       .then((response) => {
@@ -103,9 +131,10 @@ export const sendPut = (url, payload, config) => {
   });
 };
 
-export const sendPatch = (url, payload) => {
+// Sửa lại hàm sendPatch
+export const sendPatch = (url, payload, config = {}) => {
   return new Promise((resolve, reject) => {
-    axios.patch(url, payload)
+    axios.patch(url, payload, config)
       .then((response) => {
         handleResponse(resolve, reject, response);
       })
@@ -115,11 +144,26 @@ export const sendPatch = (url, payload) => {
   });
 };
 
-export const sendDelete = (url, payload) => {
+// Sửa lại hàm sendDelete
+export const sendDelete = (url, payload, config = {}) => {
   return new Promise((resolve, reject) => {
-    const queryParamString = payload ? `?${new URLSearchParams(payload).toString()}` : '';
-
-    axios.delete(`${url}${queryParamString}`)
+    // Nếu payload là mảng, xử lý nó khác (để hỗ trợ trường hợp xóa nhiều mục)
+    const options = { ...config };
+    
+    if (payload) {
+      if (Array.isArray(payload)) {
+        options.data = payload;
+      } else {
+        // Trường hợp query params
+        const queryParams = new URLSearchParams();
+        Object.entries(payload).forEach(([key, value]) => {
+          queryParams.append(key, value);
+        });
+        url = `${url}?${queryParams.toString()}`;
+      }
+    }
+    
+    axios.delete(url, options)
       .then((response) => {
         handleResponse(resolve, reject, response);
       })
@@ -128,5 +172,3 @@ export const sendDelete = (url, payload) => {
       });
   });
 };
-
-

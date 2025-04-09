@@ -1,10 +1,12 @@
 <script setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, computed } from 'vue';
   import { useConfirm } from 'primevue/useconfirm';
   import { useToast } from 'primevue/usetoast';
   import CreateForm from './Create.vue';
   import { Medicines } from '@admin/stores/admin/Medicines';
   import { MedicineMediaService } from '@admin/stores/admin/MedicineMedia';
+  import { Attributes } from '@admin/stores/admin/AttributeService';
+
 
   const confirm = useConfirm();
   const toast = useToast();
@@ -30,9 +32,8 @@
     { field: 'name', label: 'Tên thuốc', visible: true },
     { field: 'banner', label: 'Hình ảnh', visible: true },
     { field: 'code', label: 'Mã thuốc', visible: true },
-    { field: 'origin', label: 'Xuất xứ', visible: true },
-    { field: 'manufacturer', label: 'Nhà sản xuất', visible: true }
-  ]);
+    { field: 'origin', label: 'Xuất xứ', visible: true }
+   ]);
   
   // Hàm lấy ảnh chính cho thuốc
   const fetchMedicineImage = async (medicineId) => {
@@ -95,20 +96,27 @@
   };
   
   // Xác nhận xóa thuốc
-  const confirmDelete = (id) => {
+  const confirmDelete = (ids) => {
+    // Nếu ids là một số, chuyển thành mảng
+    const deleteIds = Array.isArray(ids) ? ids : [ids];
+    
     confirm.require({
-      message: 'Bạn có chắc chắn muốn xóa bản ghi này không?',
+      message: `Bạn có chắc chắn muốn xóa ${deleteIds.length > 1 ? deleteIds.length + ' bản ghi' : 'bản ghi này'} không?`,
       header: 'Xác nhận',
       icon: 'pi pi-info-circle',
       accept: async () => {
         try {
           isLoading.value = true;
-          await Medicines.deleteMedicines([id]);
+          await Medicines.deleteMedicines(deleteIds);
           fetchMedicines();
+          
+          // Reset selected medicines after deletion
+          selectedMedicines.value = [];
+          
           toast.add({
             severity: 'success',
             summary: 'Thành công',
-            detail: 'Đã xóa thuốc thành công',
+            detail: `Đã xóa ${deleteIds.length > 1 ? deleteIds.length + ' thuốc' : 'thuốc'} thành công`,
             life: 3000
           });
         } catch (error) {
@@ -135,6 +143,11 @@
   const getMedicineImageUrl = (medicineId) => {
     return medicineImages.value[medicineId] || 'https://placehold.co/80x80/EEE/999?text=Không+có+ảnh';
   };
+
+  // Kiểm tra xem có thuốc nào được chọn để xóa không
+  const isDeleteButtonDisabled = computed(() => {
+    return selectedMedicines.value.length === 0;
+  });
 </script>
     
 <template>
@@ -157,7 +170,16 @@
       <template #header>
         <div class="flex justify-between items-center">
           <span class="font-semibold text-xl">Danh sách Thuốc</span>
-          <Button label="Thêm Thuốc" icon="pi pi-plus" @click="openForm" />
+          <div class="flex gap-2">
+            <Button 
+              label="Xóa" 
+              icon="pi pi-trash" 
+              severity="danger" 
+              :disabled="isDeleteButtonDisabled"
+              @click="confirmDelete(selectedMedicines.map(m => m.id))" 
+            />
+            <Button label="Thêm Thuốc" icon="pi pi-plus" @click="openForm" />
+          </div>
         </div>
       </template>
 
