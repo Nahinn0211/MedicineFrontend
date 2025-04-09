@@ -23,15 +23,16 @@ export class UserService extends BaseService {
     async uploadUserImage(id: number, image: File): Promise<User | null> {
         const formData = new FormData();
         formData.append('file', image);
-
+        const token = localStorage.getItem('token');
         return this.handleRequest(
             () => this.apiClient.post<User>(
                 `/${id}/upload`,
                 formData,
                 {
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'
-                    }
+                    }   
                 }
             ).then(response => response.data),
             `Error uploading image for user with ID ${id}`
