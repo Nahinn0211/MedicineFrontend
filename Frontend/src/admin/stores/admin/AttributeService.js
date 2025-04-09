@@ -1,29 +1,29 @@
-// AttributeService.js
 import { sendDelete, sendGet, sendPost, sendPut } from '@admin/services/axios';
+import { API_BASE_URL } from '@/config/apiConfig';
 
 export const Attributes = {
   async getAttributes() {
-    return await sendGet("http://localhost:8080/api/attributes");
+    return await sendGet(`${API_BASE_URL}/attributes`);
   },
-
+  
   async getAttributeById(id) {
-    return await sendGet(`http://localhost:8080/api/attributes/${id}`);
+    return await sendGet(`${API_BASE_URL}/attributes/${id}`);
   },
-
+  
   async updateAttribute(attributeData) {
-    const response = await sendPost("http://localhost:8080/api/attributes/save", attributeData);
+    const response = await sendPost(`${API_BASE_URL}/attributes/save`, attributeData);
     return response.data;
   },
-
+  
   async insertAttribute(attributeData) {
     return this.updateAttribute(attributeData);
   },
-
+  
   async deleteAttribute(id) {
-    return await sendDelete(`http://localhost:8080/api/attributes/${id}`);
+    return await sendDelete(`${API_BASE_URL}/attributes/${id}`);
   },
-
+  
   async deleteMultipleAttributes(ids) {
-    return await sendDelete("http://localhost:8080/api/attributes/delete-multiple", { data: ids });
+    return await sendDelete(`${API_BASE_URL}/attributes/delete-multiple`, { data: ids });
   },
 };

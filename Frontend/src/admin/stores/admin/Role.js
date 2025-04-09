@@ -48,7 +48,7 @@ export const RoleService = {
 
   // Xóa một hoặc nhiều vai trò
   async deleteRoles(ids) {
-    const response = await sendPost(`${API_BASE_URL}/roles/delete`, ids);
+    const response = await sendDelete(`${API_BASE_URL}/roles`, ids);
     return response.data;
   }
 };

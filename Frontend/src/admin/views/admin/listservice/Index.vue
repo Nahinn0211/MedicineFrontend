@@ -1,4 +1,4 @@
-  <script setup>
+<script setup>
   import { ref, onMounted } from 'vue';
   import { useConfirm } from 'primevue/useconfirm';
   import CreateForm from './Create.vue';
@@ -63,30 +63,35 @@
     }
   };
   
-  
-  const handleDelete = async (id) => {
-    const ids = Array.isArray(id) ? id : [id];
+   const handleDelete = (ids) => {
+    // Hiển thị thông báo xác nhận tùy thuộc vào số lượng dịch vụ cần xóa
+    const isMultiple = Array.isArray(ids) && ids.length > 1;
     
     confirm.require({
-      message: ids.length > 1
+      message: isMultiple
         ? 'Bạn có chắc chắn muốn xóa các dịch vụ đã chọn không?'
         : 'Bạn có chắc chắn muốn xóa dịch vụ này không?',
       header: 'Xác nhận',
       icon: 'pi pi-info-circle',
       accept: async () => {
         try {
-          await ListService.deleteServices(ids);
+           await ListService.deleteServices(ids);
   
+          // Hiển thị thông báo thành công
           toast.add({
             severity: 'success',
             summary: 'Thành công',
-            detail: `Đã xóa ${ids.length} dịch vụ`,
+            detail: isMultiple 
+              ? `Đã xóa ${ids.length} dịch vụ` 
+              : 'Đã xóa dịch vụ thành công',
             life: 3000
           });
   
+          // Cập nhật lại danh sách
           fetchServices();
           
-          if (ids.length > 1) {
+          // Nếu là xóa nhiều, reset danh sách đã chọn
+          if (isMultiple) {
             selectedServices.value = [];
           }
         } catch (error) {
@@ -102,6 +107,12 @@
     });
   };
   
+  // Hàm xử lý nút xóa từng dịch vụ
+  const confirmDelete = (id) => {
+    handleDelete([id]); // Luôn truyền mảng chứa một phần tử
+  };
+  
+  // Hàm xử lý nút xóa nhiều dịch vụ
   const deleteSelectedServices = () => {
     if (selectedServices.value.length === 0) {
       toast.add({
@@ -115,7 +126,7 @@
     
     const ids = selectedServices.value.map(service => service.id);
     handleDelete(ids);
-  };  
+  };
   
   
   const formatDate = (dateString) => {
@@ -201,5 +212,3 @@
     padding: 1rem;
   }
   </style>
-  
-  
