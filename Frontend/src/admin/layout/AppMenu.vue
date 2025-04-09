@@ -53,6 +53,17 @@ const menuItems = computed(() => {
       ],
     },
     {
+      label: "Bệnh nhân",
+      icon: "pi pi-fw pi-compass",
+      items: [
+        {
+          label: "Danh sách bệnh nhân",
+          icon: "pi pi-fw pi-list",
+          to: "/admin/patientprofiles",
+        },
+      ],
+    },
+    {
       label: "Dịch vụ",
       icon: "pi pi-fw pi-compass",
       items: [
@@ -77,11 +88,7 @@ const menuItems = computed(() => {
       label: "Cài đặt giao diện người dùng",
       icon: "pi pi-fw pi-compass",
       items: [
-        {
-          label: "Thuộc tính",
-          icon: "pi pi-fw pi-list",
-          to: "/admin/attributes",
-        },
+       
         {
           label: "Thương hiệu",
           icon: "pi pi-fw pi-list",

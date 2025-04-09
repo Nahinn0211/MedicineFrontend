@@ -32,13 +32,12 @@ export const ListService = {
     });
   },
 
-  // Xóa một hoặc nhiều dịch vụ
   async deleteServices(ids) {
-     const idsArray = Array.isArray(ids) ? ids : [ids];
+    // Đảm bảo ids luôn là một mảng
+    const idsArray = Array.isArray(ids) ? ids : [ids];
     
-     return await sendDelete(SERVICES_ENDPOINT, {
-      data: idsArray
-    });
+    // Truyền mảng IDs trực tiếp làm tham số thứ hai của sendDelete
+    return await sendDelete(SERVICES_ENDPOINT, idsArray);
   },
 
   // Lấy danh sách ID bác sĩ theo dịch vụ

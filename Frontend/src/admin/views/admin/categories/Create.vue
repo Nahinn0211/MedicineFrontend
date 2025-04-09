@@ -1,11 +1,12 @@
 <script setup>
-    import { ref, computed, defineProps, defineEmits, onMounted } from 'vue';
+    import { ref, computed, defineProps, defineEmits, onMounted, watch } from 'vue';
     import { useToast } from 'primevue/usetoast';
     import FormDialog from '@admin/components/FormDialog.vue';
     import Dropdown from 'primevue/dropdown';
     import InputText from 'primevue/inputtext';
     import FileUpload from 'primevue/fileupload';
     import { Categories } from '@admin/stores/admin/Categories';
+    import { API_BASE_URL } from '@/config/apiConfig';
     
     const props = defineProps({
         modelValue: Boolean,
@@ -30,129 +31,145 @@
     const toast = useToast();
     const parentCategories = ref([]);
     const isEditMode = computed(() => !!props.data.id);
-    const uploadedFilePath = ref(null);
-    const fileUpload = ref(null);
     const selectedFile = ref(null);
+    const previewImage = ref('');
+    const fileUpload = ref(null);
+    const uploadsBaseUrl = computed(() => `${API_BASE_URL.replace('/api', '')}/uploads/categories/`);
     
-    const fetchParentCategories = async () => {
-        try {
-            const response = await Categories.getCategories();
-            // Thêm lựa chọn "Không có danh mục cha"
-            parentCategories.value = [
-                { 
-                    id: null, 
-                    name: 'Không có danh mục cha' 
-                },
-                ...response.data.filter(category => category.id !== props.data.id)
-            ];
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách danh mục:', error);
-            toast.add({ 
-                severity: 'error', 
-                summary: 'Lỗi', 
-                detail: 'Không thể lấy danh sách danh mục', 
-                life: 3000 
-            });
-        }
-    };
-    
-    onMounted(() => {
-        fetchParentCategories();
-        if (props.data.image) {
-            uploadedFilePath.value = props.data.image;
+    // Watch for changes in form visibility
+    watch(formVisible, (newVal) => {
+        if (newVal) {
+            fetchParentCategories();
+            // Set preview image if editing and image exists
+            if (isEditMode.value && props.data.image) {
+                if (props.data.image.startsWith('http')) {
+                    previewImage.value = props.data.image;
+                } else {
+                    previewImage.value = `${uploadsBaseUrl.value}${props.data.image}`;
+                }
+            } else {
+                previewImage.value = '';
+            }
         }
     });
     
-    const closeForm = () => {
-        formVisible.value = false;
-    };
-    
-    const onSelect = (event) => {
-        if (event.files && event.files.length > 0) {
-            selectedFile.value = event.files[0];
-            
-            // Tạo URL xem trước
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                uploadedFilePath.value = e.target.result;
-            };
-            reader.readAsDataURL(selectedFile.value);
+    // Fetch parent categories for dropdown
+    const fetchParentCategories = async () => {
+        try {
+            const response = await Categories.getCategories();
+            // Filter out current category (can't be its own parent)
+            const filteredCategories = isEditMode.value 
+                ? response.data.filter(category => category.id !== props.data.id)
+                : response.data;
+                
+            // Add 'No parent' option
+            parentCategories.value = [
+                { id: null, name: 'Không có danh mục cha' },
+                ...filteredCategories
+            ];
+        } catch (error) {
+            showToast('error', 'Lỗi', 'Không thể tải danh sách danh mục cha');
+            console.error('Error fetching parent categories:', error);
         }
     };
     
-    const onClear = () => {
-        uploadedFilePath.value = null;
-        props.data.image = null;
+    // Reset form on close
+    const closeForm = () => {
+        formVisible.value = false;
         selectedFile.value = null;
+        previewImage.value = '';
+        
+        // Clear file upload component if exists
+        if (fileUpload.value) {
+            fileUpload.value.clear();
+        }
     };
     
-    const saveCategories = async () => {
+    // Handle file selection
+    const onSelect = (event) => {
+        if (event.files && event.files.length > 0) {
+            const file = event.files[0];
+            selectedFile.value = file;
+            
+            // Create preview URL
+            previewImage.value = URL.createObjectURL(file);
+        }
+    };
+    
+    // Clear selected file
+    const onClear = () => {
+        selectedFile.value = null;
+        previewImage.value = isEditMode.value && props.data.image 
+            ? `${uploadsBaseUrl.value}${props.data.image}`
+            : '';
+    };
+    
+    // Save category
+    const saveCategory = async () => {
         try {
-            // Kiểm tra tên danh mục
-            if (!props.data.name || props.data.name.trim() === '') {
-                toast.add({ 
-                    severity: 'warn', 
-                    summary: 'Cảnh báo', 
-                    detail: 'Vui lòng nhập tên danh mục', 
-                    life: 3000 
-                });
+            // Validate name
+            if (!props.data.name?.trim()) {
+                showToast('warn', 'Cảnh báo', 'Vui lòng nhập tên danh mục');
                 return;
             }
     
             isSubmitting.value = true;
     
-            // Chuẩn bị dữ liệu category dưới dạng object JavaScript
+            // Create category data object
             const categoryData = {
                 name: props.data.name
             };
             
-            // Chỉ thêm parentId vào dữ liệu gửi đi nếu nó không phải null
+            // Add parentId if set
             if (props.data.parentId !== null) {
-                categoryData.parent_id = props.data.parentId;
+                categoryData.parentId = props.data.parentId;
             }
     
-            // Nếu đang ở chế độ chỉnh sửa, thêm ID
+            // Add ID if editing
             if (isEditMode.value) {
                 categoryData.id = props.data.id;
             }
-            
-            // Chuyển đổi object thành chuỗi JSON
-            const categoryJson = JSON.stringify(categoryData);
     
-            // Chuẩn bị FormData
+            // Create FormData
             const formData = new FormData();
-            formData.append('category', categoryJson);
+            formData.append('category', JSON.stringify(categoryData));
             
-            // Thêm file nếu có
+            // Add file if selected
             if (selectedFile.value) {
                 formData.append('file', selectedFile.value);
             }
     
-            // Gọi service để lưu
-            const response = await Categories.saveCategory(formData);
+            // Save category
+            await Categories.saveCategory(formData);
             
-            toast.add({ 
-                severity: 'success', 
-                summary: 'Thành Công', 
-                detail: isEditMode.value 
-                    ? 'Đã cập nhật danh mục thành công' 
-                    : 'Đã thêm danh mục thành công', 
-                life: 3000 
-            });
+            showToast(
+                'success', 
+                'Thành công', 
+                isEditMode.value ? 'Đã cập nhật danh mục' : 'Đã thêm danh mục mới'
+            );
             
             emit('refreshList');
             closeForm();
         } catch (error) {
-            toast.add({ 
-                severity: 'error', 
-                summary: 'Lỗi', 
-                detail: 'Không thể lưu danh mục: ' + (error.response?.data?.message || error.message), 
-                life: 3000 
-            });
-            console.error('Lỗi khi lưu danh mục:', error);
+            showToast(
+                'error', 
+                'Lỗi', 
+                'Không thể lưu danh mục: ' + (error.response?.data || error.message)
+            );
+            console.error('Error saving category:', error);
         } finally {
             isSubmitting.value = false;
         }
+    };
+    
+    // Helper for showing toast messages
+    const showToast = (severity, summary, detail) => {
+        toast.add({
+            severity,
+            summary,
+            detail,
+            life: 3000
+        });
     };
     </script>
     
@@ -161,11 +178,12 @@
             :visible="formVisible" 
             :title="isEditMode ? 'Cập nhật danh mục' : 'Thêm danh mục mới'" 
             :loading="isSubmitting" 
-            @save="saveCategories" 
+            @save="saveCategory" 
             @cancel="closeForm" 
             @hide="closeForm"
         >
             <div class="flex flex-col gap-4">
+                <!-- Tên danh mục -->
                 <div class="flex flex-col gap-1 w-full">
                     <label for="categoryName" class="font-semibold">Tên danh mục:</label>
                     <InputText 
@@ -176,6 +194,7 @@
                     />
                 </div>
                 
+                <!-- Danh mục cha -->
                 <div class="flex flex-col gap-1 w-full">
                     <label for="parentCategory" class="font-semibold">Danh mục cha:</label>
                     <Dropdown 
@@ -188,8 +207,10 @@
                         class="w-full"
                     />
                 </div>
+                
+                <!-- Ảnh danh mục -->
                 <div class="flex flex-col gap-1 w-full">
-                    <label for="image" class="font-semibold">Ảnh thương hiệu:</label>
+                    <label for="image" class="font-semibold">Ảnh danh mục:</label>
                     <FileUpload 
                         ref="fileUpload" 
                         mode="basic" 
@@ -202,25 +223,16 @@
                         chooseLabel="Chọn ảnh" 
                     />
     
-                    <div v-if="uploadedFilePath" class="mt-2">
-                        <div class="mt-2">
-                            <img 
-                                :src="uploadedFilePath" 
-                                alt="Ảnh xem trước" 
-                                class="max-w-full h-auto max-h-40 rounded border" 
-                                @error="$event.target.src = 'https://placehold.co/100x100/EEE/999?text=Lỗi+Ảnh'" 
-                            />
-                        </div>
+                    <!-- Preview image -->
+                    <div v-if="previewImage" class="mt-2">
+                        <img 
+                            :src="previewImage" 
+                            alt="Ảnh xem trước" 
+                            class="max-w-full h-auto max-h-40 rounded border" 
+                            @error="$event.target.src = 'https://placehold.co/100x100/EEE/999?text=Ảnh+không+tồn+tại'" 
+                        />
                     </div>
                 </div>
             </div>
         </FormDialog>
     </template>
-    
-    <style scoped>
-    .form-error {
-        color: red;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-    </style>

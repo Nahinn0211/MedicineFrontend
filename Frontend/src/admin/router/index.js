@@ -71,14 +71,7 @@ const adminRoutes = [
         },
         component: () => import('@admin/views/admin/doctorprofiles/Index.vue')
       },
-      {
-        path: 'attributes',
-        name: 'admin-attributes',
-        meta: {
-          breadcrumb: ['Attributes'],
-        },
-        component: () => import('@admin/views/admin/attributes/Index.vue')
-      },
+      
       {
         path: 'brands',
         name: 'admin-brands',
@@ -186,21 +179,14 @@ const adminRoutes = [
         component: () => import('@admin/views/admin/doctorprofiles/Index.vue')
       },
       {
-        path: 'attributes',
-        name: 'admin-attributes',
+        path: 'patientprofiles',
+        name: 'admin-patientprofiles',
         meta: {
-          breadcrumb: ['Attributes'],
+          breadcrumb: ['Patient profiles'],
         },
-        component: () => import('@admin/views/admin/attributes/Index.vue')
+        component: () => import('@admin/views/admin/patientprofiles/Index.vue')
       },
-      {
-        path: 'brands',
-        name: 'admin-brands',
-        meta: {
-          breadcrumb: ['Brands'],
-        },
-        component: () => import('@admin/views/admin/brands/Index.vue')
-      },
+      
       {
         path: 'categories',
         name: 'admin-categories',
