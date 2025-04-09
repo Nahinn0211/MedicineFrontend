@@ -160,20 +160,32 @@ export class ConsultationService {
     // Thiết lập kết nối WebSocket
     setupWebSocketConnection(consultationCode: string, messageHandler: (message: any) => void): any {
         try {
+            const token = localStorage.getItem('token');
+            console.log('WebSocket token:', token);
+            
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+    
+            // Sử dụng @stomp/stompjs phiên bản mới nhất
             const socket = new SockJS('http://localhost:8080/ws-consultation');
             this.stompClient = Stomp.over(socket);
-
-            this.stompClient.connect(
-                {
-                    headers: this.getHeaders(),
+    
+            // Cấu hình kết nối chi tiết
+            this.stompClient.configure({
+                connectHeaders: {
+                    'Authorization': `Bearer ${token}`
                 },
-                () => {
+                debug: (str) => {
+                    console.log('STOMP Debug:', str);
+                },
+                onConnect: (frame) => {
                     console.log('WebSocket connected successfully');
-
-                    // Đăng ký nhận thông báo chung cho cuộc tư vấn
+                    
+                    // Đăng ký các kênh như bình thường
                     this.subscriptions['general'] = this.stompClient.subscribe(
                         `/topic/consultation/${consultationCode}`,
-                        (message: any) => {
+                        (message) => {
                             try {
                                 const payload = JSON.parse(message.body);
                                 console.log('Received general message:', payload);
@@ -215,17 +227,16 @@ export class ConsultationService {
 
                     // Đánh dấu thành công và gửi thông báo đã kết nối
                     this.sendSystemMessage(consultationCode, 'CLIENT_CONNECTED');
-                }, (error: any) => {
-                    console.error('WebSocket connection error:', error);
-                    this.handleReconnect(consultationCode, messageHandler);
-                });
-
-            // Xử lý khi kết nối bị mất
-            socket.onclose = () => {
-                console.log('WebSocket connection closed');
-                this.handleReconnect(consultationCode, messageHandler);
-            };
-
+                },
+                onStompError: (frame) => {
+                    console.error('Broker reported error:', frame.headers['message']);
+                    console.error('Additional details:', frame);
+                }
+            });
+    
+            // Kích hoạt kết nối
+            this.stompClient.activate();
+    
             return this.stompClient;
         } catch (error) {
             console.error('Error setting up WebSocket:', error);

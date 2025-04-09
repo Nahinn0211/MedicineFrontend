@@ -339,7 +339,6 @@ const toggleUserLock = async (user) => {
   <div class="card">
     <Toast />
     <ConfirmDialog />
-
     <
 
     <DataTable
@@ -520,7 +519,6 @@ const toggleUserLock = async (user) => {
         </div>
       </template>
     </DataTable>
-
     <CreateUser
       v-model:modelValue="form.visible"
       :data="form.data"
@@ -535,6 +533,20 @@ const toggleUserLock = async (user) => {
   border-radius: 0.5rem;
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.search-container {
+  margin-bottom: 1rem;
+}
+
+:deep(.p-inputgroup .p-dropdown) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+:deep(.p-inputgroup .p-dropdown .p-dropdown-label) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 :deep(.p-datatable-wrapper) {

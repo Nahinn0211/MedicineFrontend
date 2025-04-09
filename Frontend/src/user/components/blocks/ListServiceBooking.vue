@@ -330,7 +330,6 @@ const fetchBookings = async () => {
 };
 
 const canStartConsultation = (booking) => {
-    // Chỉ cho phép tham gia nếu booking đã được xác nhận và chưa hoàn thành
     if (booking.status === 'COMPLETED') {
         const now = new Date();
         const appointmentDateTime = new Date(booking.appointment.appointmentDate + 'T' + booking.appointment.appointmentTime);

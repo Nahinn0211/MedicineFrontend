@@ -20,43 +20,43 @@ export const USER_DEFAULTS = {
 // Hàm chuẩn hóa dữ liệu người dùng
 export const normalizeUserData = (user) => {
   const normalizedUser = { ...user };
-  
+
   // Chuyển đổi chuỗi ngày thành đối tượng Date nếu cần
   if (normalizedUser.createdAt && typeof normalizedUser.createdAt === 'string') {
     normalizedUser.createdAt = new Date(normalizedUser.createdAt);
   }
-  
+
   if (normalizedUser.updatedAt && typeof normalizedUser.updatedAt === 'string') {
     normalizedUser.updatedAt = new Date(normalizedUser.updatedAt);
   }
-  
+
   return normalizedUser;
 };
 
 // Hàm kiểm tra tính hợp lệ của dữ liệu người dùng
 export const validateUserData = (data, isEditMode = false) => {
   const errors = [];
-  
+
   if (!data.fullName || data.fullName.trim() === '') {
     errors.push('Vui lòng nhập họ tên');
   }
-  
+
   if (!data.email || data.email.trim() === '') {
     errors.push('Vui lòng nhập email');
   } else if (!/\S+@\S+\.\S+/.test(data.email)) {
     errors.push('Email không hợp lệ');
   }
-  
+
   if (!isEditMode && (!data.password || data.password.trim() === '')) {
     errors.push('Vui lòng nhập mật khẩu');
   } else if (!isEditMode && data.password && data.password.length < 6) {
     errors.push('Mật khẩu phải có ít nhất 6 ký tự');
   }
-  
+
   if (data.phone && !/^\d{10,11}$/.test(data.phone)) {
     errors.push('Số điện thoại không hợp lệ');
   }
-  
+
   return errors;
 };
 
@@ -76,11 +76,11 @@ export const formatDate = (dateString) => {
 // Hàm xử lý URL avatar
 export const getAvatarUrl = (avatar) => {
   if (!avatar) return null;
-  
+
   if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
     return avatar;
   }
-  
+
   return `${API_BASE_URL}/uploads/users/${avatar}`;
 };
 
@@ -244,11 +244,6 @@ export const UserService = {
   // Get all patients
   async getAllUsersRoleUser() {
     return await sendGet(`${API_BASE_URL}/users/listUserByUser`);
-  },
-  
-  // Login user
-  async login(credentials) {
-    return await sendPost(`${API_BASE_URL}/auth/login`, credentials);
   },
 
   // Register new user
