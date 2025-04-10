@@ -25,7 +25,7 @@
   const currentBrand = ref({
     id: null,
     name: '',
-    description: ''
+    image: ''
   });
   const isEditMode = ref(false);
   const submitted = ref(false);
@@ -64,11 +64,19 @@
     
     if (brand) {
       // Edit mode
-      currentBrand.value = { ...brand };
+      currentBrand.value = { 
+        id: brand.id, 
+        name: brand.name, 
+        image: brand.image 
+      };
       isEditMode.value = true;
     } else {
       // Add mode
-      currentBrand.value = { id: null, name: '', description: '' };
+      currentBrand.value = { 
+        id: null, 
+        name: '', 
+        image: '' 
+      };
       isEditMode.value = false;
     }
     
@@ -102,7 +110,7 @@
       // Thêm dữ liệu vào formData
       formData.append('id', currentBrand.value.id || '');
       formData.append('name', currentBrand.value.name);
-      formData.append('description', currentBrand.value.description || '');
+      formData.append('image', currentBrand.value.image || '');
       
       await Brands.saveBrand(formData);
       
@@ -211,8 +219,7 @@
     fetchBrands();
   });
   </script>
-  
-  <template>
+   <template>
     <div class="card">
       <Toast />
       <ConfirmDialog />
@@ -255,12 +262,24 @@
         
         <!-- ID Column -->
         <Column field="id" header="ID" sortable style="min-width: 5rem"></Column>
-        
+           <!-- Image Column -->
+           <Column header="Ảnh" style="min-width: 10rem">
+            <template #body="{ data }">
+              <img
+                :src="data.image || 'https://placehold.co/100x100/EEE/999?text=No+Image'"
+                :alt="data.name"
+                class="w-20 h-20 object-cover rounded-lg"
+                @error="
+                  $event.target.src =
+                    'https://placehold.co/100x100/EEE/999?text=Lỗi+Ảnh'
+                "
+              />
+            </template>
+          </Column>
         <!-- Name Column -->
         <Column field="name" header="Tên thương hiệu" sortable style="min-width: 12rem"></Column>
         
-        <!-- Description Column -->
-        <Column field="description" header="Mô tả" sortable style="min-width: 15rem"></Column>
+     
         
         <!-- Actions Column -->
         <Column header="Tác vụ" :exportable="false" style="min-width: 8rem">
@@ -327,13 +346,11 @@
         </div>
         
         <div class="field mb-4">
-          <label for="description" class="font-semibold block mb-2">Mô tả</label>
+          <label for="image" class="font-semibold block mb-2">Ảnh thương hiệu</label>
           <InputText 
-            id="description" 
-            v-model="currentBrand.description" 
-            rows="3" 
-            cols="20"
-            placeholder="Nhập mô tả thương hiệu"
+            id="image" 
+            v-model="currentBrand.image" 
+            placeholder="Nhập URL ảnh thương hiệu"
           />
         </div>
         
@@ -355,6 +372,7 @@
       </Dialog>
     </div>
   </template>
+  ```
   
   <style scoped>
   .card {

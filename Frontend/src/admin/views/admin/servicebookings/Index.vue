@@ -1,24 +1,35 @@
 <script setup>
   import { ref, onMounted } from 'vue';
   import { useConfirm } from 'primevue/useconfirm';
-  import { ServiceBookingService } from '@admin/stores/admin/ServiceBooking';
   import { useToast } from 'primevue/usetoast';
+  
+  // Primevue Components
   import Toast from 'primevue/toast';
   import ConfirmDialog from 'primevue/confirmdialog';
   import DataTable from 'primevue/datatable';
   import Column from 'primevue/column';
   import Button from 'primevue/button';
+  
+  // Custom Components
   import EditForm from './EditForm.vue';
   import DetailModal from './DetailModal.vue';
   
+  // Services
+  import { ServiceBookingService } from '@admin/stores/admin/ServiceBooking';
+  import { AppointmentService } from '@/admin/stores/admin/Appointments';
+  
+  // Composition Setup
   const confirm = useConfirm();
   const toast = useToast();
+  
+  // Reactive State
   const serviceBookings = ref([]);
   const selectedServiceBookings = ref([]);
   const isLoading = ref(false);
   const editForm = ref({ visible: false, data: {} });
   const detailModal = ref({ visible: false, booking: {} });
   
+  // Columns Configuration
   const columns = ref([
     { field: 'id', label: 'ID', visible: true },
     { field: 'service.name', label: 'Dịch vụ', visible: true },
@@ -30,11 +41,25 @@
     { field: 'updatedAt', label: 'Ngày cập nhật', visible: true }
   ]);
   
+  // Fetch Service Bookings with Appointment Details
   const fetchServiceBookings = async () => {
     try {
       isLoading.value = true;
       const response = await ServiceBookingService.getServiceBookings();
-      serviceBookings.value = response.data;
+      serviceBookings.value = await Promise.all(
+        response.data.map(async (booking) => {
+          try {
+            const appointmentResponse = await AppointmentService.getAppointmentByServiceBookingId(booking.id);
+            return {
+              ...booking,
+              appointmentDetails: appointmentResponse.data || null
+            };
+          } catch (error) {
+            console.error(`Error fetching appointment for booking ${booking.id}:`, error);
+            return booking;
+          }
+        })
+      );
     } catch (error) {
       console.error('Error fetching service bookings:', error);
       toast.add({
@@ -48,11 +73,9 @@
     }
   };
   
-  onMounted(fetchServiceBookings);
-  
+  // Open Edit Form for a Booking
   const openEditForm = async (data) => {
     try {
-      // Lấy chi tiết đặt lịch mới nhất
       const response = await ServiceBookingService.getServiceBookingById(data.id);
       editForm.value = {
         visible: true,
@@ -69,10 +92,10 @@
     }
   };
   
+  // Open Detail Modal for a Booking
   const openDetailModal = async (data) => {
     try {
       isLoading.value = true;
-      // Lấy thông tin chi tiết đặt lịch
       const response = await ServiceBookingService.getServiceBookingById(data.id);
       detailModal.value = {
         visible: true,
@@ -91,6 +114,7 @@
     }
   };
   
+  // Handle Deletion of Bookings
   const handleDelete = async (id) => {
     const ids = Array.isArray(id) ? id : [id];
   
@@ -132,6 +156,7 @@
     });
   };
   
+  // Delete Selected Service Bookings
   const deleteSelectedServiceBookings = () => {
     if (selectedServiceBookings.value.length === 0) {
       toast.add({
@@ -147,6 +172,7 @@
     handleDelete(ids);
   };
   
+  // Utility Functions
   const formatDate = (dateString) => {
     if (!dateString) return '---';
     const date = new Date(dateString);
@@ -162,8 +188,8 @@
   const formatPrice = (price) => {
     return price ? price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) : '---';
   };
-
-  // Format phương thức thanh toán
+  
+  // Payment Method Mapping
   const getPaymentMethodLabel = (method) => {
     const methodMap = {
       'PAYPAL': 'PayPal',
@@ -176,8 +202,8 @@
     };
     return methodMap[method] || method;
   };
-
-  // Format trạng thái
+  
+  // Status Mapping
   const getStatusLabel = (status) => {
     const statusMap = {
       'PENDING': 'Đang chờ',
@@ -188,8 +214,8 @@
     };
     return statusMap[status] || status;
   };
-
-  // Lấy class CSS cho trạng thái
+  
+  // Status CSS Class Mapping
   const getStatusClass = (status) => {
     const classMap = {
       'PENDING': 'bg-yellow-100 text-yellow-800',
@@ -200,8 +226,10 @@
     };
     return classMap[status] || '';
   };
-</script>
   
+  // Fetch service bookings on component mount
+  onMounted(fetchServiceBookings);
+  </script>
 <template>
   <div class="card">
     <Toast />
@@ -246,7 +274,11 @@
       
       <Column field="patient.user.fullName" header="Bệnh nhân" sortable>
         <template #body="{ data }">
-          {{ data.patient?.user?.fullName || '---' }}
+          {{ 
+            data.appointmentDetails?.patient?.user?.fullName || 
+            data.patient?.user?.fullName || 
+            "Không có tên" 
+          }}
         </template>
       </Column>
       

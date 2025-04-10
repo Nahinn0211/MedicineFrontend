@@ -31,8 +31,7 @@
   const columns = ref([
     { field: 'name', label: 'Tên danh mục', sortable: true },
     { field: 'parentId', label: 'Danh mục cha', sortable: true },
-    { field: 'createdAt', label: 'Ngày tạo', sortable: true },
-    { field: 'updatedAt', label: 'Ngày cập nhật', sortable: true }
+    { field: 'image', label: 'Ảnh', sortable: false }
   ]);
   
   // Computed properties
@@ -129,20 +128,6 @@
     handleDelete([id]);
   };
   
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return '---';
-    
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-  
   // Find parent category name
   const findParentName = (parentId) => {
     if (!parentId) return 'Không có';
@@ -178,131 +163,132 @@
     });
   };
   </script>
-  
-  <template>
-    <div class="card p-4 bg-white rounded-lg shadow-sm">
-      <Toast />
-      <ConfirmDialog />
+ <template>
+  <div class="card p-4 bg-white rounded-lg shadow-sm">
+    <Toast />
+    <ConfirmDialog />
+    
+    <DataTable 
+      v-model:selection="selectedCategories" 
+      :value="categories" 
+      dataKey="id" 
+      :paginator="true"
+      :rows="10" 
+      :loading="isLoading"
+      showCurrentPageReport
+      currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} danh mục"
+      :rowsPerPageOptions="[5, 10, 20, 50]"
+      responsiveLayout="scroll"
+      stripedRows
+      class="p-datatable-sm"
+    >
+      <!-- Header -->
+      <template #header>
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-semibold text-gray-800">Quản lý danh mục</h2>
+          <div class="flex gap-2">
+            <Button 
+              v-if="hasSelectedCategories" 
+              label="Xóa đã chọn" 
+              icon="pi pi-trash" 
+              severity="danger" 
+              @click="deleteSelectedCategories"
+            />
+            <Button 
+              label="Thêm danh mục" 
+              icon="pi pi-plus" 
+              @click="openForm()"
+            />
+          </div>
+        </div>
+      </template>
       
-      <DataTable 
-        v-model:selection="selectedCategories" 
-        :value="categories" 
-        dataKey="id" 
-        :paginator="true"
-        :rows="10" 
-        :loading="isLoading"
-        showCurrentPageReport
-        currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} danh mục"
-        :rowsPerPageOptions="[5, 10, 20, 50]"
-        responsiveLayout="scroll"
-        stripedRows
-        class="p-datatable-sm"
-      >
-        <!-- Header -->
-        <template #header>
-          <div class="flex justify-between items-center">
-            <h2 class="text-xl font-semibold text-gray-800">Quản lý danh mục</h2>
-            <div class="flex gap-2">
-              <Button 
-                v-if="hasSelectedCategories" 
-                label="Xóa đã chọn" 
-                icon="pi pi-trash" 
-                severity="danger" 
-                @click="deleteSelectedCategories"
-              />
-              <Button 
-                label="Thêm danh mục" 
-                icon="pi pi-plus" 
-                @click="openForm()"
-              />
-            </div>
-          </div>
-        </template>
-        
-        <!-- Selection column -->
-        <Column selectionMode="multiple" headerStyle="width: 3rem" />
-        
-        <!-- ID column -->
-        <Column field="id" header="ID" sortable headerStyle="width: 5rem" />
-        
-        <!-- Name column -->
-        <Column field="name" header="Tên danh mục" sortable>
-          <template #body="{ data }">
-            <span class="font-medium">{{ data.name }}</span>
-          </template>
-        </Column>
-        
-        <!-- Parent category column -->
-        <Column field="parentId" header="Danh mục cha" sortable>
-          <template #body="{ data }">
-            {{ findParentName(data.parentId) }}
-          </template>
-        </Column>
-        
-        <!-- Created date column -->
-        <Column field="createdAt" header="Ngày tạo" sortable>
-          <template #body="{ data }">
-            {{ formatDate(data.createdAt) }}
-          </template>
-        </Column>
-        
-        <!-- Updated date column -->
-        <Column field="updatedAt" header="Cập nhật lần cuối" sortable>
-          <template #body="{ data }">
-            {{ formatDate(data.updatedAt) }}
-          </template>
-        </Column>
-        
-        <!-- Actions column -->
-        <Column header="Thao tác" headerStyle="width: 8rem">
-          <template #body="{ data }">
-            <div class="flex gap-2">
-              <Button 
-                icon="pi pi-pencil" 
-                outlined 
-                size="small"
-                aria-label="Chỉnh sửa"
-                tooltip="Chỉnh sửa"
-                @click="openForm(data)" 
-              />
-              <Button 
-                icon="pi pi-trash" 
-                outlined 
-                severity="danger" 
-                size="small"
-                aria-label="Xóa"
-                tooltip="Xóa"
-                @click="deleteCategory(data.id)" 
-              />
-            </div>
-          </template>
-        </Column>
-        
-        <!-- Empty state -->
-        <template #empty>
-          <div class="text-center p-4">
-            <i class="pi pi-inbox text-gray-400 text-5xl mb-3"></i>
-            <p>Không có danh mục nào.</p>
-          </div>
-        </template>
-        
-        <!-- Loading state -->
-        <template #loading>
-          <div class="text-center p-4">
-            <i class="pi pi-spin pi-spinner text-blue-500 text-5xl mb-3"></i>
-            <p>Đang tải dữ liệu...</p>
-          </div>
-        </template>
-      </DataTable>
+      <!-- Selection column -->
+      <Column selectionMode="multiple" headerStyle="width: 3rem" />
       
-      <!-- Category form -->
-      <CreateForm 
-        v-model:modelValue="form.visible" 
-        :data="form.data" 
-        @refreshList="fetchCategories" 
-      />
-    </div>
-  </template>
+      <!-- ID column -->
+      <Column field="id" header="ID" sortable headerStyle="width: 5rem" />
+       <!-- Image column -->
+       <Column header="Ảnh" style="min-width: 10rem">
+        <template #body="{ data }">
+          <img
+            :src="data.image || 'https://placehold.co/100x100/EEE/999?text=No+Image'"
+            :alt="data.name"
+            class="w-20 h-20 object-cover rounded-lg"
+            @error="
+              $event.target.src =
+                'https://placehold.co/100x100/EEE/999?text=Lỗi+Ảnh'
+            "
+          />
+        </template>
+      </Column>
+      <!-- Name column -->
+      <Column field="name" header="Tên danh mục" sortable>
+        <template #body="{ data }">
+          <span class="font-medium">{{ data.name }}</span>
+        </template>
+      </Column>
+      
+     
+      
+      <!-- Parent category column -->
+      <Column field="parentId" header="Danh mục cha" sortable>
+        <template #body="{ data }">
+          {{ findParentName(data.parentId) }}
+        </template>
+      </Column>
+      
+      <!-- Actions column -->
+      <Column header="Thao tác" headerStyle="width: 8rem">
+        <template #body="{ data }">
+          <div class="flex gap-2">
+            <Button 
+              icon="pi pi-pencil" 
+              outlined 
+              size="small"
+              aria-label="Chỉnh sửa"
+              tooltip="Chỉnh sửa"
+              @click="openForm(data)" 
+            />
+            <Button 
+              icon="pi pi-trash" 
+              outlined 
+              severity="danger" 
+              size="small"
+              aria-label="Xóa"
+              tooltip="Xóa"
+              @click="deleteCategory(data.id)" 
+            />
+          </div>
+        </template>
+      </Column>
+      
+      <!-- Empty state -->
+      <template #empty>
+        <div class="text-center p-4">
+          <i class="pi pi-inbox text-gray-400 text-5xl mb-3"></i>
+          <p>Không có danh mục nào.</p>
+        </div>
+      </template>
+      
+      <!-- Loading state -->
+      <template #loading>
+        <div class="text-center p-4">
+          <i class="pi pi-spin pi-spinner text-blue-500 text-5xl mb-3"></i>
+          <p>Đang tải dữ liệu...</p>
+        </div>
+      </template>
+    </DataTable>
+    
+    <!-- Category form -->
+    <CreateForm 
+      v-model:modelValue="form.visible" 
+      :data="form.data" 
+      @refreshList="fetchCategories" 
+    />
+  </div>
+</template>
+```
   
   <style scoped>
   :deep(.p-datatable-header) {

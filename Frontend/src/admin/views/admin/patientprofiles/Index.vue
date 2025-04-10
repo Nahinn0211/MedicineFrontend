@@ -103,29 +103,7 @@
           </template>
         </Column>
   
-        <!-- Cột nhóm máu -->
-        <Column
-          field="bloodType"
-          header="Nhóm máu"
-          sortable
-          style="min-width: 8rem"
-        ></Column>
-  
-        <!-- Cột tiền sử bệnh -->
-        <Column
-          field="medicalHistory"
-          header="Tiền sử bệnh"
-          sortable
-          style="min-width: 12rem"
-        ></Column>
-  
-        <!-- Cột dị ứng -->
-        <Column
-          field="allergies"
-          header="Dị ứng"
-          sortable
-          style="min-width: 12rem"
-        ></Column>
+       
   
         <!-- Cột số dư tài khoản -->
         <Column
