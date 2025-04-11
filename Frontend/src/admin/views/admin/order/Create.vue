@@ -40,17 +40,17 @@ const formVisible = computed({
 const isSubmitting = ref(false);
 const toast = useToast();
 const isEditMode = computed(() => props.data.id !== 0);
- 
+
 const paymentMethods = ref([
   { label: "Tiền mặt", value: "CASH" },
   { label: "Ví MoMo", value: "BALANCEACCOUNT" },
   { label: "Chuyển khoản", value: "PAYPAL" },
 ]);
 const orderStatuses = ref([
- { label: "Đang chờ", value: "PENDING" },
- { label: "Đã xác nhận", value: "PROCESSING" },
- { label: "Đang giao hàng", value: "COMPLETED" },
- { label: "Đã hủy", value: "CANCELLED" },
+  { label: "Đang chờ", value: "PENDING" },
+  { label: "Đã xác nhận", value: "PROCESSING" },
+  { label: "Đang giao hàng", value: "COMPLETED" },
+  { label: "Đã hủy", value: "CANCELLED" },
 ]);
 
 const validateForm = () => {
@@ -86,6 +86,7 @@ const validateForm = () => {
 const closeForm = () => {
   formVisible.value = false;
 };
+
 const saveOrder = async () => {
   if (!validateForm()) return;
 
@@ -101,7 +102,7 @@ const saveOrder = async () => {
       status: props.data.status || "PENDING",
       voucherCode: props.data.voucherCode || "",
       discountAmount: props.data.discountAmount || 0,
-      note: props.data.note || ""
+      note: props.data.note || "",
     };
 
     await OrderService.saveOrder(orderData);
@@ -131,8 +132,6 @@ const saveOrder = async () => {
     isSubmitting.value = false;
   }
 };
-
-
 </script>
 
 <template>
@@ -152,9 +151,8 @@ const saveOrder = async () => {
         <InputText
           id="orderCode"
           :value="props.data.orderCode"
-          readonly
-          class="w-full border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed"
-          style="pointer-events: none"
+          disabled
+          class="w-full disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -165,9 +163,8 @@ const saveOrder = async () => {
         <InputText
           id="patientName"
           :value="props.data.patientName"
-          readonly
-          class="w-full border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed"
-          style="pointer-events: none"
+          disabled
+          class="w-full disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -217,10 +214,8 @@ const saveOrder = async () => {
         >
         <InputText
           id="voucherCode"
-          :value="props.data.voucherCode"
-          readonly
-          class="w-full border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed"
-          style="pointer-events: none"
+          v-model="props.data.voucherCode"
+          class="w-full"
         />
       </div>
 
@@ -230,13 +225,11 @@ const saveOrder = async () => {
         >
         <InputNumber
           id="discountAmount"
-          :value="props.data.discountAmount"
-          readonly
+          v-model="props.data.discountAmount"
           mode="currency"
           currency="VND"
           locale="vi-VN"
-          class="w-full border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed"
-          style="pointer-events: none"
+          class="w-full"
         />
       </div>
 
@@ -245,10 +238,9 @@ const saveOrder = async () => {
         <Textarea
           id="note"
           :value="props.data.note"
-          readonly
+          disabled
           placeholder="Nhập ghi chú"
-          class="w-full border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed"
-          style="pointer-events: none"
+          class="w-full disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
           rows="3"
         />
       </div>

@@ -8,7 +8,7 @@
     import MultiSelect from 'primevue/multiselect';
     import FileUpload from 'primevue/fileupload';  
     import { ListService } from '@admin/stores/admin/ListService';
-    import { DoctorProfileService } from '@admin/stores/admin/DoctorProfile';
+  import { DoctorProfileService } from '@admin/stores/admin/DoctorProfile';
     
     const props = defineProps({
         modelValue: Boolean,
@@ -50,32 +50,64 @@
     });
     
     // 📌 Lấy danh sách bác sĩ
-    const fetchDoctors = async () => {
-        try {
-            const response = await DoctorProfileService.getDoctorProfiles();
-            doctors.value = response.data.map((doctor) => ({
-                id: doctor.id,
-                name: doctor.fullName || `Bác sĩ ${doctor.user.fullName}`,
-                specialization: doctor.specialization || 'Chưa có chuyên môn'
-            }));
-        } catch (error) {
-            toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải danh sách bác sĩ', life: 3000 });
-        }
-    };
+const fetchDoctors = async () => {
+    try {
+        // Gọi API lấy danh sách bác sĩ
+        const response = await DoctorProfileService.getDoctorProfiles();
+        
+        // Vì response trả về đã là mảng (không có thuộc tính .data)
+        // nên chúng ta sử dụng trực tiếp response
+        doctors.value = response.map((doctor) => ({
+            id: doctor.id,
+            name: doctor.user?.fullName || `Bác sĩ ID: ${doctor.id}`,
+            specialization: doctor.specialization || 'Chưa có chuyên môn',
+            experience: doctor.experience || 'Chưa có kinh nghiệm',
+            workplace: doctor.workplace || 'Chưa có nơi làm việc',
+            avatar: doctor.user?.avatar || '',
+            biography: doctor.biography || 'Chưa cập nhật thông tin',
+            rating: doctor.averageRating || 0
+        }));
+        
+        console.log('Danh sách bác sĩ đã được tải:', doctors.value);
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách bác sĩ:', error);
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Lỗi', 
+            detail: 'Không thể tải danh sách bác sĩ: ' + (error.message || 'Đã xảy ra lỗi'), 
+            life: 3000 
+        });
+    }
+};
+
+// 📌 Lấy danh sách bác sĩ theo dịch vụ
+const fetchDoctorsByServiceId = async () => {
+    if (!props.data.id) return;
     
-    // 📌 Lấy danh sách bác sĩ theo dịch vụ
-    const fetchDoctorsByServiceId = async () => {
-        if (!props.data.id) return;
-        try {
-            const response = await ListService.getDoctorIdsByServiceId(props.data.id);
-            if (response?.data && Array.isArray(response.data)) {
-                const doctorIds = response.data;
-                selectedDoctors.value = doctors.value.filter((doctor) => doctorIds.includes(doctor.id));
-            }
-        } catch (error) {
-            toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải danh sách bác sĩ của dịch vụ', life: 3000 });
-        }
-    };
+    try {
+        const response = await ListService.getDoctorIdsByServiceId(props.data.id);
+        
+        // Kiểm tra xem response có dữ liệu không
+        // Nếu response đã là mảng trực tiếp, không cần .data
+        const doctorIds = Array.isArray(response) ? response : 
+                        (response?.data && Array.isArray(response.data) ? response.data : []);
+                        
+        console.log('Danh sách ID bác sĩ của dịch vụ:', doctorIds);
+        
+        // Cập nhật danh sách bác sĩ được chọn
+        selectedDoctors.value = doctors.value.filter((doctor) => doctorIds.includes(doctor.id));
+        console.log('Bác sĩ đã chọn:', selectedDoctors.value);
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách bác sĩ của dịch vụ:', error);
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Lỗi', 
+            detail: 'Không thể tải danh sách bác sĩ của dịch vụ: ' + (error.message || 'Đã xảy ra lỗi'), 
+            life: 3000 
+        });
+    }
+};
+    
     
     // 📌 Theo dõi khi mở form
     watchEffect(async () => {

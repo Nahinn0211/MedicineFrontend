@@ -339,7 +339,7 @@ const toggleUserLock = async (user) => {
   <div class="card">
     <Toast />
     <ConfirmDialog />
-    <
+    
 
     <DataTable
       v-model:selection="selectedUsers"
@@ -355,11 +355,11 @@ const toggleUserLock = async (user) => {
     >
       <template #header>
         <div class="flex justify-between items-center">
-          <span class="font-semibold text-xl">Danh sách dịch vụ</span>
+          <span class="font-semibold text-xl">Danh sách tài khoản</span>
           <div class="flex gap-2">
             
             <Button
-              label="Thêm dịch vụ"
+              label="Thêm tài khoản"
               icon="pi pi-plus"
               @click="openForm()"
             />
@@ -476,22 +476,8 @@ const toggleUserLock = async (user) => {
               outlined
               @click="openForm(data)"
             />
-            <Button
-              :icon="data.enabled ? 'pi pi-times' : 'pi pi-check'"
-              :severity="data.enabled ? 'warning' : 'success'"
-              rounded
-              outlined
-              @click="toggleUserStatus(data)"
-              :title="data.enabled ? 'Vô hiệu hóa' : 'Kích hoạt'"
-            />
-            <Button
-              :icon="data.locked ? 'pi pi-unlock' : 'pi pi-lock'"
-              :severity="data.locked ? 'success' : 'warning'"
-              rounded
-              outlined
-              @click="toggleUserLock(data)"
-              :title="data.locked ? 'Mở khóa' : 'Khóa'"
-            />
+           
+           
             <Button
               icon="pi pi-trash"
               rounded

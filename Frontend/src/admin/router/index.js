@@ -21,13 +21,30 @@ const adminRoutes = [
         },
         component: () => import('@admin/views/doctor/Index.vue')
       },
+      
+      {
+        path: 'doctor/appointment',
+        name: 'admin-doctor-appointment',
+        meta: {
+          breadcrumb: ['Appointment']
+        },
+        component: () => import('@admin/views/doctor/appointment.vue')
+      },
       {
         path: 'order',
         name: 'admin-order',
         meta: {
-          breadcrumb: ['Order']
+          breadcrumb: ['Quản lý đơn hàng']
         },
         component: () => import('@admin/views/admin/order/Index.vue')
+      },
+      {
+        path: 'reviews',
+        name: 'admin-reviews',
+        meta: {
+          breadcrumb: ['Đánh giá']
+        },
+        component: () => import('@admin/views/admin/reviews/Index.vue')
       },
       {
         path: 'dashboard-banking',
@@ -59,7 +76,7 @@ const adminRoutes = [
         path: 'listmedications',
         name: 'admin-listmedications',
         meta: {
-          breadcrumb: ['List of medications'],
+          breadcrumb: ['Danh sách thuốc'],
         },
         component: () => import('@admin/views/admin/medications/Index.vue')
       },
@@ -67,7 +84,7 @@ const adminRoutes = [
         path: 'doctorprofiles',
         name: 'admin-doctorprofiles',
         meta: {
-          breadcrumb: ['Doctor profiles'],
+          breadcrumb: ['Quản Lý Hồ Sơ Bác Sĩ'],
         },
         component: () => import('@admin/views/admin/doctorprofiles/Index.vue')
       },
@@ -76,7 +93,7 @@ const adminRoutes = [
         path: 'brands',
         name: 'admin-brands',
         meta: {
-          breadcrumb: ['Brands'],
+          breadcrumb: ['Quản lý Thương hiệu'],
         },
         component: () => import('@admin/views/admin/brands/Index.vue')
       },
@@ -84,18 +101,11 @@ const adminRoutes = [
         path: 'categories',
         name: 'admin-categories',
         meta: {
-          breadcrumb: ['Categories'],
+          breadcrumb: ['Quản lý danh mục'],
         },
         component: () => import('@admin/views/admin/categories/Index.vue')
       },
-      {
-        path: 'consultations',
-        name: 'admin-consultations',
-        meta: {
-          breadcrumb: ['Consultations'],
-        },
-        component: () => import('@admin/views/admin/consultations/Index.vue')
-      },
+      
       {
         path: 'listservice',
         name: 'admin-listservice',
@@ -104,35 +114,14 @@ const adminRoutes = [
         },
         component: () => import('@admin/views/admin/listservice/Index.vue')
       },
-      {
-        path: 'servicebookings',
-        name: 'admin-servicebookings',
-        meta: {
-          breadcrumb: ['Service bookings'],
-        },
-        component: () => import('@admin/views/admin/servicebookings/Index.vue')
-      },
-      {
-        path: 'vouchers',
-        name: 'admin-vouchers',
-        meta: {
-          breadcrumb: ['Vouchers'],
-        },
-        component: () => import('@admin/views/admin/vouchers/Index.vue')
-      },
-      {
-        path: 'discounts',
-        name: 'admin-discounts',
-        meta: {
-          breadcrumb: ['Discounts'],
-        },
-        component: () => import('@admin/views/admin/discounts/Index.vue')
-      },
+       
+      
+      
       {
         path: 'role',
         name: 'admin-role',
         meta: {
-          breadcrumb: ['Setting role'],
+          breadcrumb: ['Quản lý vai trò'],
         },
         component: () => import('@admin/views/admin/role/Index.vue')
       },
@@ -170,44 +159,30 @@ const adminRoutes = [
         },
         component: () => import('@admin/views/admin/medications/Index.vue')
       },
-      {
-        path: 'doctorprofiles',
-        name: 'admin-doctorprofiles',
-        meta: {
-          breadcrumb: ['Doctor profiles'],
-        },
-        component: () => import('@admin/views/admin/doctorprofiles/Index.vue')
-      },
+       
       {
         path: 'patientprofiles',
         name: 'admin-patientprofiles',
         meta: {
-          breadcrumb: ['Patient profiles'],
+          breadcrumb: ['Quản lý hồ sơ bệnh nhân'],
         },
         component: () => import('@admin/views/admin/patientprofiles/Index.vue')
       },
       
+       
       {
-        path: 'categories',
-        name: 'admin-categories',
+        path: 'appointment',
+        name: 'admin-appointment',
         meta: {
-          breadcrumb: ['Categories'],
+          breadcrumb: ['Danh sách lịch hẹn'],
         },
-        component: () => import('@admin/views/admin/categories/Index.vue')
-      },
-      {
-        path: 'consultations',
-        name: 'admin-consultations',
-        meta: {
-          breadcrumb: ['Consultations'],
-        },
-        component: () => import('@admin/views/admin/consultations/Index.vue')
+        component: () => import('@admin/views/admin/appointment/Index.vue')
       },
       {
         path: 'listservice',
         name: 'admin-listservice',
         meta: {
-          breadcrumb: ['List of service'],
+          breadcrumb: ['Danh sách dịch vụ'],
         },
         component: () => import('@admin/views/admin/listservice/Index.vue')
       },
@@ -215,7 +190,7 @@ const adminRoutes = [
         path: 'servicebookings',
         name: 'admin-servicebookings',
         meta: {
-          breadcrumb: ['Service bookings'],
+          breadcrumb: ['Danh sách đặt lịch dịch vụ'],
         },
         component: () => import('@admin/views/admin/servicebookings/Index.vue')
       },
@@ -223,7 +198,7 @@ const adminRoutes = [
         path: 'vouchers',
         name: 'admin-vouchers',
         meta: {
-          breadcrumb: ['Vouchers'],
+          breadcrumb: ['Quản lý voucher'],
         },
         component: () => import('@admin/views/admin/vouchers/Index.vue')
       },
@@ -231,23 +206,16 @@ const adminRoutes = [
         path: 'discounts',
         name: 'admin-discounts',
         meta: {
-          breadcrumb: ['Discounts'],
+          breadcrumb: ['Quản lý giảm giá'],
         },
         component: () => import('@admin/views/admin/discounts/Index.vue')
       },
-      {
-        path: 'role',
-        name: 'admin-role',
-        meta: {
-          breadcrumb: ['Setting role'],
-        },
-        component: () => import('@admin/views/admin/role/Index.vue')
-      },
+      
       {
         path: 'user',
         name: 'admin-user',
         meta: {
-          breadcrumb: ['Setting user'],
+          breadcrumb: ['Danh sách tài khoản'],
         },
         component: () => import('@admin/views/admin/user/Index.vue')
       }

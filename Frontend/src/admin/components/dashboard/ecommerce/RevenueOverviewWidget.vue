@@ -241,99 +241,7 @@
         }).format(value);
     }
     
-    // CHỨC NĂNG XUẤT EXCEL
-    async function exportToExcel() {
-        try {
-            exportLoading.value = true;
-    
-            // Chuẩn bị dữ liệu cho báo cáo
-            const periodName = selectedPeriod.value.label;
-            const currentDate = new Date().toLocaleDateString('vi-VN');
-            
-            // Gọi API riêng để lấy dữ liệu xuất Excel
-            const response = await axios.get(`${selectedPeriod.value.endpoint}/export`);
-            const exportData = response.data;
-            
-            // Tạo workbook mới
-            const wb = XLSX.utils.book_new();
-            
-            // Tạo sheet tổng quan
-            const summaryData = [
-                ['BÁO CÁO DOANH THU', '', ''],
-                ['', '', ''],
-                ['Khoảng thời gian:', periodName, ''],
-                ['Ngày xuất báo cáo:', currentDate, ''],
-                ['', '', ''],
-                ['TỔNG QUAN', '', ''],
-                ['Tổng đơn hàng:', exportData.totalOrders, ''],
-                ['Tổng doanh thu:', formatCurrency(exportData.totalRevenue), ''],
-                ['Tổng lợi nhuận:', formatCurrency(exportData.totalProfit), ''],
-                ['', '', ''],
-            ];
-            
-            // Tạo sheet chi tiết
-            const detailsHeader = ['Thời gian', 'Doanh thu', 'Lợi nhuận'];
-            const detailsData = exportData.details.map(item => [
-                item.period,
-                formatCurrency(item.revenue),
-                formatCurrency(item.profit)
-            ]);
-            
-            // Gộp dữ liệu tổng quan và chi tiết
-            const combinedData = [
-                ...summaryData,
-                ['CHI TIẾT DOANH THU THEO ' + getPeriodType()],
-                [''],
-                detailsHeader,
-                ...detailsData
-            ];
-            
-            // Tạo worksheet từ dữ liệu đã chuẩn bị
-            const ws = XLSX.utils.aoa_to_sheet(combinedData);
-            
-            // Thiết lập kiểu dữ liệu cho các ô
-            setStyles(ws);
-            
-            // Thêm worksheet vào workbook
-            XLSX.utils.book_append_sheet(wb, ws, "Báo cáo doanh thu");
-            
-            // Xuất file Excel
-            const fileName = `Bao_cao_doanh_thu_${periodName.replace(/\s+/g, '_')}_${formatDateForFileName()}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-            
-            toast.add({
-                severity: 'success',
-                summary: 'Xuất báo cáo thành công',
-                detail: `Đã xuất file ${fileName}`,
-                life: 3000
-            });
-        } catch (err) {
-            console.error('Error exporting to Excel:', err);
-            
-            // Kiểm tra lỗi từ API
-            if (err.response) {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Lỗi xuất báo cáo',
-                    detail: `Không thể xuất báo cáo: ${err.response.data.message || 'Lỗi từ máy chủ'}`,
-                    life: 3000
-                });
-            } else {
-                toast.add({
-                    severity: 'error',
-                    summary: 'Lỗi xuất báo cáo',
-                    detail: 'Không thể xuất báo cáo Excel. Vui lòng thử lại sau.',
-                    life: 3000
-                });
-            }
-            
-            // Nếu không lấy được dữ liệu từ API, sử dụng dữ liệu hiện có để xuất Excel
-            fallbackExport(periodName);
-        } finally {
-            exportLoading.value = false;
-        }
-    }
-    
+  
     // Xuất Excel từ dữ liệu biểu đồ hiện tại (dự phòng)
     function fallbackExport(periodName) {
         try {
@@ -416,14 +324,118 @@
         return 'THỜI GIAN';
     }
     
-    // Định dạng ngày tháng cho tên file
-    function formatDateForFileName() {
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        return `${day}${month}${year}`;
+   // CHỨC NĂNG XUẤT EXCEL CẢI TIẾN
+async function exportToExcel() {
+    try {
+        exportLoading.value = true;
+
+        // Chuẩn bị dữ liệu cho báo cáo
+        const periodName = selectedPeriod.value.label;
+        const currentDate = new Date().toLocaleDateString('vi-VN');
+        
+        // Kiểm tra xem có dữ liệu để xuất không
+        if (!rawData.value.labels || rawData.value.labels.length === 0) {
+            throw new Error('Không có dữ liệu để xuất');
+        }
+        
+        let exportData;
+        
+        try {
+            // Thử gọi API để lấy dữ liệu xuất Excel
+            const response = await axios.get(`${selectedPeriod.value.endpoint}/export`);
+            exportData = response.data;
+        } catch (apiError) {
+            console.warn('Không thể lấy dữ liệu từ API, sử dụng dữ liệu biểu đồ hiện tại:', apiError);
+            
+            // Sử dụng dữ liệu biểu đồ hiện tại nếu API không khả dụng
+            exportData = {
+                totalOrders: summary.value.totalOrders,
+                totalRevenue: summary.value.totalRevenue,
+                totalProfit: summary.value.totalProfit,
+                details: rawData.value.labels.map((label, index) => ({
+                    period: label,
+                    revenue: rawData.value.revenue[index],
+                    profit: rawData.value.profit[index]
+                }))
+            };
+        }
+        
+        // Tạo workbook mới
+        const wb = XLSX.utils.book_new();
+        
+        // Tạo sheet tổng quan
+        const summaryData = [
+            ['BÁO CÁO DOANH THU', '', ''],
+            ['', '', ''],
+            ['Khoảng thời gian:', periodName, ''],
+            ['Ngày xuất báo cáo:', currentDate, ''],
+            ['', '', ''],
+            ['TỔNG QUAN', '', ''],
+            ['Tổng đơn hàng:', exportData.totalOrders, ''],
+            ['Tổng doanh thu:', formatCurrency(exportData.totalRevenue), ''],
+            ['Tổng lợi nhuận:', formatCurrency(exportData.totalProfit), ''],
+            ['', '', ''],
+        ];
+        
+        // Tạo sheet chi tiết
+        const detailsHeader = ['Thời gian', 'Doanh thu', 'Lợi nhuận'];
+        const detailsData = exportData.details.map(item => [
+            item.period,
+            formatCurrency(item.revenue),
+            formatCurrency(item.profit)
+        ]);
+        
+        // Gộp dữ liệu tổng quan và chi tiết
+        const combinedData = [
+            ...summaryData,
+            ['CHI TIẾT DOANH THU THEO ' + getPeriodType()],
+            [''],
+            detailsHeader,
+            ...detailsData
+        ];
+        
+        // Tạo worksheet từ dữ liệu đã chuẩn bị
+        const ws = XLSX.utils.aoa_to_sheet(combinedData);
+        
+        // Thêm worksheet vào workbook
+        XLSX.utils.book_append_sheet(wb, ws, "Báo cáo doanh thu");
+        
+        // Áp dụng các kiểu cơ bản (đơn giản hóa phần styles)
+        // Thiết lập chiều rộng cột
+        ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 20 }];
+        
+        // Xuất file Excel
+        const fileName = `Bao_cao_doanh_thu_${periodName.replace(/\s+/g, '_')}_${formatDateForFileName()}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        
+        toast.add({
+            severity: 'success',
+            summary: 'Xuất báo cáo thành công',
+            detail: `Đã xuất file ${fileName}`,
+            life: 3000
+        });
+    } catch (err) {
+        console.error('Error exporting to Excel:', err);
+        
+        toast.add({
+            severity: 'error',
+            summary: 'Lỗi xuất báo cáo',
+            detail: 'Không thể xuất báo cáo Excel. Vui lòng thử lại sau.',
+            life: 3000
+        });
+    } finally {
+        exportLoading.value = false;
     }
+}
+
+// Định dạng ngày tháng cho tên file (đã được đơn giản hóa)
+function formatDateForFileName() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${day}${month}${year}`;
+}
     
     // Thiết lập kiểu dữ liệu cho các ô trong Excel
     function setStyles(worksheet) {
